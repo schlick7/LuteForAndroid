@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <!-- Time indicators -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/current_time_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00"
+            android:textSize="12sp"
+            android:textColor="@color/lute_on_background" />
+
+        <SeekBar
+            android:id="@+id/audio_seek_bar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/duration_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00"
+            android:textSize="12sp"
+            android:textColor="@color/lute_on_background" />
+    </LinearLayout>
+
+    <!-- Playback controls -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp">
+
+        <ImageButton
+            android:id="@+id/skip_backward_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_skip_previous"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Skip backward" />
+
+        <ImageButton
+            android:id="@+id/play_pause_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_play"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Play/Pause" />
+
+        <ImageButton
+            android:id="@+id/skip_forward_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_skip_next"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:layout_marginStart="16dp"
+            android:contentDescription="Skip forward" />
+
+        <Spinner
+            android:id="@+id/playback_rate_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginStart="16dp"
+            android:minWidth="60dp"
+            android:entries="@array/playback_rates" />
+    </LinearLayout>
+
+
+
+
+
+</LinearLayout>

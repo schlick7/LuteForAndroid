@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default theme colors -->
+    <color name="default_background">#FFFFFF</color>
+    <color name="default_text">#000000</color>
+    <color name="default_primary">#2196F3</color>
+    <color name="default_secondary">#4CAF50</color>
+
+    <!-- App-specific theme colors -->
+    <color name="app_background">#48484A</color>
+    <color name="app_text">#EBEBEB</color>
+    <color name="app_primary">#8095FF</color>
+    <color name="app_secondary">#419252</color>
+    <color name="app_surface">#333333</color>
+
+    <!-- Additional theme colors -->
+    <color name="status_0">#8095FF</color>
+    <color name="status_1">#FF6B6B</color>
+    <color name="status_2">#4ECDC4</color>
+    <color name="status_3">#FFE66D</color>
+    <color name="status_4">#1A535C</color>
+    <color name="status_5">#9B5DE5</color>
+
+    <!-- UI component colors -->
+    <color name="toolbar_background">#333333</color>
+    <color name="navigation_background">#48484A</color>
+    <color name="card_background">#333333</color>
+    <color name="divider_color">#444444</color>
+
+    <!-- Text colors -->
+    <color name="text_primary">#EBEBEB</color>
+    <color name="text_secondary">#CCCCCC</color>
+    <color name="text_hint">#999999</color>
+
+    <!-- Button colors -->
+    <color name="button_primary">#8095FF</color>
+    <color name="button_primary_pressed">#6A7FDD</color>
+    <color name="button_secondary">#419252</color>
+    <color name="button_secondary_pressed">#357A44</color>
+
+    <!-- Alert colors -->
+    <color name="alert_error">#FF5252</color>
+    <color name="alert_warning">#FFD600</color>
+    <color name="alert_success">#4CAF50</color>
+    <color name="alert_info">#2196F3</color>
+</resources>

@@ -1,0 +1,83 @@
+/* Only applied when .lute-android-app class is present */
+/* Hide unnecessary UI elements in Android app */
+.lute-android-app .header,
+.lute-android-app .menu-bar,
+.lute-android-app .home-link,
+.lute-android-app .menu,
+.lute-android-app .menu-item,
+.lute-android-app .sub-menu,
+.lute-android-app .bug_report,
+.lute-android-app .flash-notice,
+.lute-android-app .lutelogo_small,
+.lute-android-app .lutelogo,
+.lute-android-app .reading_menu_logo_container,
+.lute-android-app .hamburger-btn,
+.lute-android-app.hide-title-progress #thetexttitle,
+.lute-android-app.hide-title-progress #headertexttitle,
+.lute-android-app.hide-title-progress .read-slide-container,
+.lute-android-app.hide-title-progress .reading_header_page,
+.lute-android-app.hide-title-progress #page_indicator {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+}
+
+.lute-android-app body {
+    background-color: var(--app-background) !important;
+    color: var(--app-on-background) !important;
+    margin: 0;
+    padding: 0;
+}
+
+/* Hide scrollbars in Android app */
+.lute-android-app ::-webkit-scrollbar {
+    display: none;
+}
+
+.lute-android-app html {
+    scrollbar-width: none;
+}
+
+.lute-android-app body {
+    -ms-overflow-style: none;
+}
+
+@media screen and (max-width: 980px) {
+    #pin {
+        left: 0rem;
+        top: 0rem;
+        width: 0px;
+        height: 0px;
+        background-color: #333333;
+        border-radius: 0px;
+    }
+
+    .lute-android-app #thetexttitle,
+    .lute-android-app div#thetext {
+        padding: 0 1rem;
+    }
+}
+
+.lute-android-app div#reading-footer span {
+    margin-right: 30px;
+}
+
+.lute-android-app .menu-icon {
+    width: 2rem;
+    height: 2rem;
+}
+
+.lute-android-app #focus-container {
+    display: none;
+}
+
+.lute-android-app #tap_sets_status-container {
+    display: flex;
+}

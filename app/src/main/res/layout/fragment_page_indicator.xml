@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingTop="2dp"
+    android:paddingBottom="2dp"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp"
+    android:gravity="center">
+
+    <!-- All known button -->
+    <Button
+        android:id="@+id/all_known_button"
+        android:layout_width="wrap_content"
+        android:layout_height="42dp"
+        android:text="All Known"
+        android:minWidth="40dp"
+        android:layout_marginEnd="4dp" />
+
+    <!-- Previous page button -->
+    <Button
+        android:id="@+id/previous_page_button"
+        android:layout_width="wrap_content"
+        android:layout_height="42dp"
+        android:text="&lt;"
+        android:minWidth="32dp"
+        android:textSize="24sp"
+        android:textColor="@color/lute_on_background"
+        android:gravity="center"
+        android:padding="0dp"
+        android:includeFontPadding="false"
+        style="?android:attr/buttonBarButtonStyle" />
+
+    <!-- Page counter -->
+    <TextView
+        android:id="@+id/page_counter_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="1/1"
+        android:textSize="14sp"
+        android:textColor="@color/lute_on_background" />
+
+    <!-- Next page button -->
+    <Button
+        android:id="@+id/next_page_button"
+        android:layout_width="wrap_content"
+        android:layout_height="42dp"
+        android:text="&gt;"
+        android:minWidth="32dp"
+        android:layout_marginStart="4dp"
+        android:textSize="24sp"
+        android:textColor="@color/lute_on_background"
+        android:gravity="center"
+        android:padding="0dp"
+        android:includeFontPadding="false"
+        style="?android:attr/buttonBarButtonStyle" />
+
+    <!-- Lute logo button -->
+    <ImageButton
+        android:id="@+id/lute_logo_button"
+        android:layout_width="44dp"
+        android:layout_height="42dp"
+        android:src="@drawable/ic_lute_logo"
+        android:scaleType="centerInside"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Lute menu"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp" />
+
+    <!-- Next page button with text -->
+    <Button
+        android:id="@+id/next_page_text_button"
+        android:layout_width="wrap_content"
+        android:layout_height="42dp"
+        android:text="Next"
+        android:minWidth="40dp"
+        android:textColor="@color/lute_on_background" />
+
+</LinearLayout>

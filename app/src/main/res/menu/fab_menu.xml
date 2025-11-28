@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_text_formatting"
+        android:title="Text Formatting" />
+    <item
+        android:id="@+id/action_edit"
+        android:title="Edit Current Page" />
+    <item
+        android:id="@+id/action_bookmarks_list"
+        android:title="List Bookmarks" />
+    <item
+        android:id="@+id/action_add_bookmark"
+        android:title="Add Bookmark" />
+    <item
+        android:id="@+id/action_translate_sentence"
+        android:title="Translate Sentence" />
+    <item
+        android:id="@+id/action_translate_page"
+        android:title="Translate Page" />
+    <item
+        android:id="@+id/action_toggle_highlights"
+        android:title="Toggle Highlights" />
+    <item
+        android:id="@+id/action_toggle_title_progress"
+        android:title="Toggle Title &amp; Progress Bar" />
+    <item
+        android:id="@+id/action_toggle_fullscreen"
+        android:title="Toggle Fullscreen" />
+    <item
+        android:id="@+id/action_create_anki_cards"
+        android:title="Create Anki Cards for Selection" />
+    <item
+        android:id="@+id/action_create_anki_card_term"
+        android:title="Create Anki Card for Term" />
+</menu>

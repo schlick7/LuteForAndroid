@@ -1,0 +1,606 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/lute_background"
+    android:scrollbars="none"
+    tools:context=".ui.settings.AppSettingsFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="App Settings"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Server Configuration"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Server URL"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/edit_text_server_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter server URL (e.g., http://192.168.1.100:5001)"
+            android:inputType="textUri"
+            android:textColor="@color/lute_on_background"
+            android:textColorHint="@color/lute_on_surface"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/button_save_settings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save URL"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/text_view_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="14sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Instructions"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Enter the full URL of your Lute server including the protocol (http:// or https://) and port number. For example:"
+            android:textSize="14sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="• http://192.168.1.100:5001"
+            android:textSize="14sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="• https://yourdomain.com:5001"
+            android:textSize="14sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="• http://localhost:5001"
+            android:textSize="14sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Header Display Settings"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Language for Word Count Display"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinner_language_selection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/spinner_border" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Word Count Visibility"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinner_word_count_visibility"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/spinner_border" />
+
+        <Button
+            android:id="@+id/button_save_language"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Header Display Settings"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Theme Settings"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Theme Mode"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinner_theme_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/spinner_border" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Native Reader Theme"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Theme Mode"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinner_native_reader_theme_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/spinner_border" />
+
+        <TextView
+            android:id="@+id/text_view_background_color_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Background Color"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp"
+            android:visibility="gone" />
+
+        <EditText
+            android:id="@+id/edit_text_background_color"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter hex color (e.g., #FFFFFF)"
+            android:inputType="text"
+            android:textColor="@color/lute_on_background"
+            android:textColorHint="@color/lute_on_surface"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/text_view_text_color_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Text Color"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp"
+            android:visibility="gone" />
+
+        <EditText
+            android:id="@+id/edit_text_text_color"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter hex color (e.g., #000000)"
+            android:inputType="text"
+            android:textColor="@color/lute_on_background"
+            android:textColorHint="@color/lute_on_surface"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
+
+        <CheckBox
+            android:id="@+id/checkbox_disable_css_injection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Disable CSS Injection"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/button_save_theme"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Theme Settings"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Default Reader Settings"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Default Reader"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinner_default_reader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/spinner_border" />
+
+        <Button
+            android:id="@+id/button_save_default_reader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Default Reader"
+            android:layout_marginBottom="16dp" />
+
+        <!-- AI Settings Section -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AI Settings"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="OpenAI Endpoint URL - /v1/chat/completions"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/edit_text_ai_endpoint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="http://192.168.1.100:11434/v1/chat/completions"
+            android:inputType="textUri"
+            android:textColor="@color/lute_on_background"
+            android:textColorHint="@color/lute_on_surface"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AI API Key (Leave blank for Local)"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/edit_text_ai_api_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter API key (e.g., for OpenAI)"
+            android:inputType="textPassword"
+            android:textColor="@color/lute_on_background"
+            android:textColorHint="@color/lute_on_surface"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AI Model Name"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/edit_text_ai_model"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter AI model name (e.g., llama2, mistral, phi)"
+            android:inputType="text"
+            android:textColor="@color/lute_on_background"
+            android:textColorHint="@color/lute_on_surface"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AI Prompt for Term Form"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/edit_text_ai_prompt_term"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter AI prompt for term translation (use {term} as placeholder)"
+            android:inputType="textMultiLine"
+            android:minLines="2"
+            android:scrollbars="vertical"
+            android:textColor="@color/lute_on_background"
+            android:textColorHint="@color/lute_on_surface"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AI Prompt for Sentence Reader"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/edit_text_ai_prompt_sentence"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter AI prompt for sentence processing (use {sentence} as placeholder)"
+            android:inputType="textMultiLine"
+            android:minLines="2"
+            android:scrollbars="vertical"
+            android:textColor="@color/lute_on_background"
+            android:textColorHint="@color/lute_on_surface"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <CheckBox
+                android:id="@+id/checkbox_show_ai_button_term"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Show AI Button in Term Form"
+                android:checked="true"
+                android:layout_marginEnd="4dp" />
+
+            <CheckBox
+                android:id="@+id/checkbox_show_ai_button_sentence"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Show AI Button in Sentence Reader"
+                android:checked="true"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/button_save_ai_settings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save AI Settings"
+            android:layout_marginBottom="16dp" />
+
+        <!-- TTS Settings Section -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="TTS Settings"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="TTS Engine"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinner_tts_engine"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/spinner_border" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="TTS Language"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinner_tts_language"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/spinner_border" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Speech Rate"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <SeekBar
+            android:id="@+id/seek_bar_tts_rate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="150"
+            android:progress="50"
+            android:layout_marginBottom="16dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
+        <TextView
+            android:id="@+id/text_view_tts_rate_value"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Current rate: 1.0x"
+            android:textSize="14sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp"
+            android:gravity="center" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Speech Pitch"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <SeekBar
+            android:id="@+id/seek_bar_tts_pitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="40"
+            android:progress="20"
+            android:layout_marginBottom="16dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
+        <TextView
+            android:id="@+id/text_view_tts_pitch_value"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Current pitch: 1.0x"
+            android:textSize="14sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp"
+            android:gravity="center" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Voice Selection"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinner_tts_voice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/spinner_border" />
+
+        <Button
+            android:id="@+id/button_save_tts_settings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save TTS Settings"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AI Integration Instructions"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="For local LLM usage with OpenAI endpoints like Ollama or llama.cpp:"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1. Install and run Ollama (default port: 11434) or llama.cpp server (default port: 8080)"
+            android:textSize="14sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="2. Enter the endpoint URL (e.g., http://localhost:11434/v1/chat/completions for Ollama)"
+            android:textSize="14sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="3. Enter the model name (e.g., llama3, mistral, phi, Qwen3-30B-A3B)"
+            android:textSize="14sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="4. Customize prompts as needed and save settings"
+            android:textSize="14sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="16dp" />
+
+    </LinearLayout>
+
+</ScrollView>

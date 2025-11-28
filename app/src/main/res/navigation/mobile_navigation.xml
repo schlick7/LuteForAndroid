@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_books">
+
+    <fragment
+        android:id="@+id/nav_books"
+        android:name="com.example.luteforandroidv2.ui.books.BooksFragment"
+        android:label="@string/menu_books"
+        tools:layout="@layout/fragment_books" >
+        <action
+            android:id="@+id/action_nav_books_to_nav_read"
+            app:destination="@id/nav_read"
+            app:popUpTo="@id/nav_books"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_nav_books_to_nav_native_read"
+            app:destination="@id/nav_native_read"
+            app:popUpTo="@id/nav_books"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_native_books"
+        android:name="com.example.luteforandroidv2.ui.nativebooks.NativeBooksFragment"
+        android:label="Native Books"
+        tools:layout="@layout/fragment_native_books" >
+        <action
+            android:id="@+id/action_nav_native_books_to_nav_read"
+            app:destination="@id/nav_read"
+            app:popUpTo="@id/nav_native_books"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_nav_native_books_to_nav_native_read"
+            app:destination="@id/nav_native_read"
+            app:popUpTo="@id/nav_native_books"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_read"
+        android:name="com.example.luteforandroidv2.ui.read.ReadFragment"
+        android:label="@string/menu_reader"
+        tools:layout="@layout/fragment_read" >
+        <argument
+            android:name="bookId"
+            app:argType="string"
+            android:defaultValue="" />
+        <action
+            android:id="@+id/action_nav_read_to_nav_native_read"
+            app:destination="@id/nav_native_read"
+            app:popUpTo="@id/nav_read"
+            app:popUpToInclusive="true">
+            <argument
+                android:name="bookId"
+                app:argType="string"
+                android:defaultValue="" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_native_read"
+        android:name="com.example.luteforandroidv2.ui.nativeread.NativeReadFragment"
+        android:label="Native Reader"
+        tools:layout="@layout/fragment_native_read" >
+        <argument
+            android:name="bookId"
+            app:argType="string"
+            android:defaultValue="" />
+        <action
+            android:id="@+id/action_nav_native_read_to_nav_read"
+            app:destination="@id/nav_read"
+            app:popUpTo="@id/nav_native_read"
+            app:popUpToInclusive="true">
+            <argument
+                android:name="bookId"
+                app:argType="string"
+                android:defaultValue="" />
+        </action>
+        <action
+            android:id="@+id/action_nav_native_read_to_nav_sentence_reader"
+            app:destination="@id/nav_sentence_reader" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_terms"
+        android:name="com.example.luteforandroidv2.ui.terms.TermsFragment"
+        android:label="@string/menu_terms"
+        tools:layout="@layout/fragment_terms" />
+
+    <fragment
+        android:id="@+id/nav_settings"
+        android:name="com.example.luteforandroidv2.ui.settings.SettingsFragment"
+        android:label="@string/action_settings"
+        tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/nav_stats"
+        android:name="com.example.luteforandroidv2.ui.stats.StatsFragment"
+        android:label="@string/menu_stats"
+        tools:layout="@layout/fragment_stats" />
+
+    <fragment
+        android:id="@+id/nav_about"
+        android:name="com.example.luteforandroidv2.ui.about.AboutFragment"
+        android:label="@string/menu_about"
+        tools:layout="@layout/fragment_about" />
+
+    <fragment
+        android:id="@+id/nav_sentence_reader"
+        android:name="com.example.luteforandroidv2.ui.nativeread.SentenceReadFragment"
+        android:label="Sentence Reader"
+        tools:layout="@layout/fragment_sentence_read">
+        <argument
+            android:name="bookId"
+            app:argType="string"
+            android:defaultValue="" />
+        <action
+            android:id="@+id/action_nav_sentence_reader_to_nav_native_read"
+            app:destination="@id/nav_native_read"
+            app:popUpTo="@id/nav_sentence_reader"
+            app:popUpToInclusive="true">
+            <argument
+                android:name="bookId"
+                app:argType="string"
+                android:defaultValue="" />
+        </action>
+    </fragment>
+</navigation>

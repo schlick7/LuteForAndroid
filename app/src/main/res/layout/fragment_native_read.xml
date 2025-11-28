@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- Toolbar Fragment Container -->
+    <FrameLayout
+        android:id="@+id/toolbar_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Audio Player Fragment Container (Only visible when audio is present) -->
+    <FrameLayout
+        android:id="@+id/audio_player_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <!-- Main Content ScrollView -->
+    <com.example.luteforandroidv2.ui.nativeread.NonScrollingScrollView
+        android:id="@+id/content_scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- Text Content Container -->
+        <LinearLayout
+            android:id="@+id/text_content_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <!-- Text content will be dynamically added here -->
+
+        </LinearLayout>
+    </com.example.luteforandroidv2.ui.nativeread.NonScrollingScrollView>
+
+    <!-- Status Terms Container (Visible when showStatusTerms is true) -->
+    <LinearLayout
+        android:id="@+id/status_terms_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@color/lute_background"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Status Terms"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/lute_on_background"
+            android:paddingBottom="8dp" />
+
+        <!-- RecyclerView or ScrollView for status terms will be added programmatically -->
+        <ScrollView
+            android:id="@+id/status_terms_scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/status_terms_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- Sentence Navigation Controls (Only for Sentence Reader) -->
+    <LinearLayout
+        android:id="@+id/sentence_navigation_controls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/prev_sentence_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="&lt; Previous"
+            android:minWidth="48dp"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/sentence_counter_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="1/1"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background" />
+
+        <Button
+            android:id="@+id/next_sentence_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Next &gt;"
+            android:minWidth="48dp"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <!-- Translation Popup Container (Overlay) -->
+    <FrameLayout
+        android:id="@+id/translation_popup_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <!-- Reader Options Menu Container -->
+    <include
+        android:id="@+id/reader_options_menu"
+        layout="@layout/menu_reader_options" />
+
+    <!-- Page Indicator Fragment Container -->
+    <FrameLayout
+        android:id="@+id/page_indicator_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Dictionary Container -->
+    <FrameLayout
+        android:id="@+id/dictionary_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+</LinearLayout>

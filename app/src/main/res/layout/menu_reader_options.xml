@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/menu_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/lute_background"
+    android:elevation="8dp"
+    android:padding="16dp"
+    android:visibility="gone">
+
+    <!-- Book Title Header -->
+    <TextView
+        android:id="@+id/book_title_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Book Title"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/lute_on_background"
+        android:gravity="center"
+        android:paddingBottom="12dp"
+        android:layout_marginBottom="8dp"
+        android:background="?android:attr/selectableItemBackground" />
+
+    <!-- Text Formatting Option -->
+    <LinearLayout
+        android:id="@+id/text_formatting_option"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:background="?android:attr/selectableItemBackground">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Text Formatting"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background" />
+
+    </LinearLayout>
+
+    <!-- Sentence Reader Option -->
+    <LinearLayout
+        android:id="@+id/sentence_reader_option"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:background="?android:attr/selectableItemBackground">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Sentence Reader Mode"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background" />
+
+    </LinearLayout>
+
+    <!-- Fullscreen Toggle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Fullscreen Mode"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background" />
+
+        <Switch
+            android:id="@+id/fullscreen_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <!-- Show All Known Toggle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Show All Known Button"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background" />
+
+        <Switch
+            android:id="@+id/show_all_known_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <!-- Show Audio Player Toggle -->
+    <LinearLayout
+        android:id="@+id/audio_player_toggle_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Show Audio Player"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background" />
+
+        <Switch
+            android:id="@+id/show_audio_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <!-- Show Term Highlights Toggle -->
+    <LinearLayout
+        android:id="@+id/term_highlights_switch_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Term Highlights"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background" />
+
+        <Switch
+            android:id="@+id/term_highlights_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true" />
+
+    </LinearLayout>
+
+    <!-- Show Status Terms Toggle -->
+    <LinearLayout
+        android:id="@+id/show_status_terms_switch_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Show Status Terms"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background" />
+
+        <Switch
+            android:id="@+id/show_status_terms_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <!-- Show TTS Button Toggle (Sentence Reader Only) -->
+    <LinearLayout
+        android:id="@+id/show_tts_button_switch_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Show TTS Button"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background" />
+
+        <Switch
+            android:id="@+id/show_tts_button_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <!-- Help Option -->
+    <LinearLayout
+        android:id="@+id/help_option"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:background="?android:attr/selectableItemBackground">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Help"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background" />
+
+    </LinearLayout>
+
+</LinearLayout>

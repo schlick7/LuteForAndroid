@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_read"
+            android:icon="@drawable/reading"
+            android:title="@string/menu_reader" />
+        <item
+            android:id="@+id/nav_native_read"
+            android:icon="@drawable/reading"
+            android:title="Native Reader" />
+        <item
+            android:id="@+id/nav_books"
+            android:icon="@drawable/books"
+            android:title="@string/menu_books" />
+        <item
+            android:id="@+id/nav_native_books"
+            android:icon="@drawable/books"
+            android:title="Native Books" />
+        <item
+            android:id="@+id/nav_terms"
+            android:icon="@drawable/terms"
+            android:title="@string/menu_terms" />
+        <item
+            android:id="@+id/nav_stats"
+            android:icon="@drawable/statistics"
+            android:title="@string/menu_stats" />
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/setting"
+            android:title="@string/action_settings" />
+        <item
+            android:id="@+id/nav_about"
+            android:icon="@drawable/about"
+            android:title="@string/menu_about" />
+    </group>
+
+    <item android:title="">
+        <menu>
+            <item
+                android:id="@+id/nav_versions"
+                android:title="@string/app_version"
+                android:enabled="false" />
+            <item
+                android:id="@+id/nav_lute_version"
+                android:title="Lute Version: Fetching..."
+                android:enabled="false" />
+        </menu>
+    </item>
+</menu>
