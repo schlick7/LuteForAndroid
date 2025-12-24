@@ -40,6 +40,24 @@ class AppSettingsFragment : Fragment() {
     private lateinit var ttsLanguageAdapter: ArrayAdapter<String>
     // TTS voice is now a text input field instead of spinner
 
+    companion object {
+        // SharedPreferences keys for Android TTS settings
+        private const val TTS_RATE_ANDROID = "tts_rate_android"
+        private const val TTS_PITCH_ANDROID = "tts_pitch_android"
+        private const val TTS_VOICE_ANDROID = "tts_voice_android"
+        private const val TTS_LANGUAGE_ANDROID = "tts_language_android"
+
+        // SharedPreferences keys for Kokoro TTS settings
+        private const val TTS_RATE_KOKORO = "tts_rate_kokoro"
+        private const val TTS_PITCH_KOKORO = "tts_pitch_kokoro"
+        private const val TTS_VOICE_KOKORO = "tts_voice_kokoro"
+        private const val TTS_LANGUAGE_KOKORO = "tts_language_kokoro"
+
+        // Common keys that apply to both engines
+        private const val TTS_ENGINE = "tts_engine"
+        private const val KOKORO_SERVER_URL = "kokoro_server_url"
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -1001,12 +1019,15 @@ class AppSettingsFragment : Fragment() {
                     binding.textViewKokoroUrlLabel.visibility = View.VISIBLE
                     binding.editTextKokoroUrl.visibility = View.VISIBLE
                     // Load saved Kokoro URL
-                    val kokoroUrl = sharedPref.getString("kokoro_server_url", "http://192.168.1.100:8880")
+                    val kokoroUrl = sharedPref.getString(KOKORO_SERVER_URL, "http://192.168.1.100:8880")
                     binding.editTextKokoroUrl.setText(kokoroUrl)
                 } else {
                     binding.textViewKokoroUrlLabel.visibility = View.GONE
                     binding.editTextKokoroUrl.visibility = View.GONE
                 }
+
+                // Load settings specific to the selected engine
+                loadTtsSettingsForEngine(selectedEngine)
             }
 
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
@@ -1094,20 +1115,20 @@ class AppSettingsFragment : Fragment() {
             // Validate Kokoro server URL before saving
             validateKokoroServerUrl { isValid ->
                 if (isValid) {
-                    // Save settings
+                    // Save settings to engine-specific keys
                     with(sharedPref.edit()) {
-                        putString("tts_engine", selectedTtsEngine)
-                        putString("tts_language", selectedTtsLanguage)
-                        putFloat("tts_rate", ttsRate)
-                        putFloat("tts_pitch", ttsPitch)
-                        putString("tts_voice", selectedTtsVoice)
+                        putString(TTS_ENGINE, selectedTtsEngine)
+                        putString(TTS_LANGUAGE_KOKORO, selectedTtsLanguage)
+                        putFloat(TTS_RATE_KOKORO, ttsRate)
+                        putFloat(TTS_PITCH_KOKORO, ttsPitch)
+                        putString(TTS_VOICE_KOKORO, selectedTtsVoice)
 
                         val kokoroUrl = binding.editTextKokoroUrl.text.toString().trim()
                         if (kokoroUrl.isNotEmpty()) {
-                            putString("kokoro_server_url", kokoroUrl)
+                            putString(KOKORO_SERVER_URL, kokoroUrl)
                         } else {
                             // Use default URL if empty
-                            putString("kokoro_server_url", "http://192.168.1.100:8880")
+                            putString(KOKORO_SERVER_URL, "http://192.168.1.100:8880")
                         }
 
                         apply()
@@ -1135,13 +1156,13 @@ class AppSettingsFragment : Fragment() {
                 }
             }
         } else {
-            // Save settings without validation for Android TTS
+            // Save settings to engine-specific keys for Android TTS
             with(sharedPref.edit()) {
-                putString("tts_engine", selectedTtsEngine)
-                putString("tts_language", selectedTtsLanguage)
-                putFloat("tts_rate", ttsRate)
-                putFloat("tts_pitch", ttsPitch)
-                putString("tts_voice", selectedTtsVoice)
+                putString(TTS_ENGINE, selectedTtsEngine)
+                putString(TTS_LANGUAGE_ANDROID, selectedTtsLanguage)
+                putFloat(TTS_RATE_ANDROID, ttsRate)
+                putFloat(TTS_PITCH_ANDROID, ttsPitch)
+                putString(TTS_VOICE_ANDROID, selectedTtsVoice)
 
                 apply()
             }
@@ -1203,12 +1224,12 @@ class AppSettingsFragment : Fragment() {
         }
     }
 
-    private fun applyTtsSettingsToManager(rate: Float, pitch: Float, voice: String) {
+    private fun applyTtsSettingsToManager(rate: Float, pitch: Float, voice: String?) {
         try {
             val ttsManager = TTSManager.getInstance(requireContext())
             ttsManager.setSpeechRate(rate)
             ttsManager.setPitch(pitch)
-            if (voice.isNotEmpty()) {
+            if (!voice.isNullOrEmpty()) {
                 ttsManager.setVoice(voice)
             }
         } catch (e: Exception) {
@@ -1226,7 +1247,7 @@ class AppSettingsFragment : Fragment() {
     private fun loadTtsSettings() {
         // Load the selected TTS engine from SharedPreferences
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        val selectedTtsEngine = sharedPref.getString("tts_engine", "Android TTS")
+        val selectedTtsEngine = sharedPref.getString(TTS_ENGINE, "Android TTS") ?: "Android TTS"
         val ttsEngineOptions = arrayOf("Android TTS", "Kokoro TTS")
         val position = ttsEngineOptions.indexOf(selectedTtsEngine)
         if (position >= 0) {
@@ -1237,21 +1258,39 @@ class AppSettingsFragment : Fragment() {
                 binding.textViewKokoroUrlLabel.visibility = View.VISIBLE
                 binding.editTextKokoroUrl.visibility = View.VISIBLE
                 // Load saved Kokoro URL
-                val kokoroUrl = sharedPref.getString("kokoro_server_url", "http://192.168.1.100:8880")
+                val kokoroUrl =
+                    sharedPref.getString(KOKORO_SERVER_URL, "http://192.168.1.100:8880") ?: "http://192.168.1.100:8880"
                 binding.editTextKokoroUrl.setText(kokoroUrl)
             } else {
                 binding.textViewKokoroUrlLabel.visibility = View.GONE
                 binding.editTextKokoroUrl.visibility = View.GONE
             }
+
+            // Load settings specific to the selected engine
+            loadTtsSettingsForEngine(selectedTtsEngine)
         } else {
             // Default to "Android TTS"
             binding.spinnerTtsEngine.setSelection(0)
             binding.textViewKokoroUrlLabel.visibility = View.GONE
             binding.editTextKokoroUrl.visibility = View.GONE
+
+            // Load default Android TTS settings
+            loadTtsSettingsForEngine("Android TTS")
         }
+    }
+
+    private fun loadTtsSettingsForEngine(engine: String) {
+        val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+
+        // Determine which keys to use based on the engine
+        val languageKey = if (engine == "Kokoro TTS") TTS_LANGUAGE_KOKORO else TTS_LANGUAGE_ANDROID
+        val rateKey = if (engine == "Kokoro TTS") TTS_RATE_KOKORO else TTS_RATE_ANDROID
+        val pitchKey = if (engine == "Kokoro TTS") TTS_PITCH_KOKORO else TTS_PITCH_ANDROID
+        val voiceKey = if (engine == "Kokoro TTS") TTS_VOICE_KOKORO else TTS_VOICE_ANDROID
 
         // Load the selected TTS language from SharedPreferences
-        val selectedTtsLanguage = sharedPref.getString("tts_language", "Auto (Detect from Book)")
+        val selectedTtsLanguage =
+            sharedPref.getString(languageKey, "Auto (Detect from Book)") ?: "Auto (Detect from Book)"
         val ttsLanguageOptions =
             arrayOf(
                 "Auto (Detect from Book)",
@@ -1295,26 +1334,30 @@ class AppSettingsFragment : Fragment() {
         }
 
         // Load TTS rate from SharedPreferences
-        val ttsRate = sharedPref.getFloat("tts_rate", 1.0f)
+        val ttsRate = sharedPref.getFloat(rateKey, 1.0f)
         val rateProgress = ((ttsRate - 0.5f) * 100).toInt() // Convert 0.5-2.0 range to 0-150 range
         binding.seekBarTtsRate.progress = rateProgress.coerceIn(0, 150)
         binding.textViewTtsRateValue.text = "Current rate: ${String.format("%.1f", ttsRate)}x"
 
         // Load TTS pitch from SharedPreferences
-        val ttsPitch = sharedPref.getFloat("tts_pitch", 1.0f)
+        val ttsPitch = sharedPref.getFloat(pitchKey, 1.0f)
         val pitchProgress = ((ttsPitch - 0.8f) * 100).toInt() // Convert 0.8-1.2 range to 0-40 range
         binding.seekBarTtsPitch.progress = pitchProgress.coerceIn(0, 40)
         binding.textViewTtsPitchValue.text = "Current pitch: ${String.format("%.1f", ttsPitch)}x"
 
         // Load TTS voice from SharedPreferences into the text field
-        val selectedTtsVoice = sharedPref.getString("tts_voice", "")
+        val selectedTtsVoice = sharedPref.getString(voiceKey, "")
         binding.editTextTtsVoice.setText(selectedTtsVoice)
     }
 
     private fun setupTtsRateSeekBar() {
-        // Initialize the seekbar progress based on saved values
+        // Initialize the seekbar progress based on saved values for the currently selected engine
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        val savedRate = sharedPref.getFloat("tts_rate", 1.0f)
+        val selectedTtsEngine = binding.spinnerTtsEngine.selectedItem?.toString() ?: "Android TTS"
+
+        // Determine which key to use based on the selected engine
+        val rateKey = if (selectedTtsEngine == "Kokoro TTS") TTS_RATE_KOKORO else TTS_RATE_ANDROID
+        val savedRate = sharedPref.getFloat(rateKey, 1.0f)
         val rateProgress =
             ((savedRate - 0.5f) * 100).toInt() // Convert 0.5-2.0 range to 0-150 range
         binding.seekBarTtsRate.progress = rateProgress.coerceIn(0, 150)
@@ -1342,9 +1385,13 @@ class AppSettingsFragment : Fragment() {
     }
 
     private fun setupTtsPitchSeekBar() {
-        // Initialize the seekbar progress based on saved values
+        // Initialize the seekbar progress based on saved values for the currently selected engine
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        val savedPitch = sharedPref.getFloat("tts_pitch", 1.0f)
+        val selectedTtsEngine = binding.spinnerTtsEngine.selectedItem?.toString() ?: "Android TTS"
+
+        // Determine which key to use based on the selected engine
+        val pitchKey = if (selectedTtsEngine == "Kokoro TTS") TTS_PITCH_KOKORO else TTS_PITCH_ANDROID
+        val savedPitch = sharedPref.getFloat(pitchKey, 1.0f)
         val pitchProgress =
             ((savedPitch - 0.8f) * 100).toInt() // Convert 0.8-1.2 range to 0-40 range
         binding.seekBarTtsPitch.progress = pitchProgress.coerceIn(0, 40)
@@ -1377,9 +1424,13 @@ class AppSettingsFragment : Fragment() {
             showAvailableVoicesDialog()
         }
 
-        // Load previously selected TTS voice
+        // Load previously selected TTS voice for the currently selected engine
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        val selectedTtsVoice = sharedPref.getString("tts_voice", "")
+        val selectedTtsEngine = binding.spinnerTtsEngine.selectedItem?.toString() ?: "Android TTS"
+
+        // Determine which key to use based on the selected engine
+        val voiceKey = if (selectedTtsEngine == "Kokoro TTS") TTS_VOICE_KOKORO else TTS_VOICE_ANDROID
+        val selectedTtsVoice = sharedPref.getString(voiceKey, "")
         binding.editTextTtsVoice.setText(selectedTtsVoice)
     }
 

@@ -37,9 +37,12 @@ class TTSManager(private val context: Context) {
     fun initializeTTS(initCallback: (Boolean) -> Unit) {
         // Load the selected TTS engine from preferences
         val sharedPref = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        selectedTTSEngine = sharedPref.getString("tts_engine", "Android TTS") ?: "Android TTS"
+        selectedTTSEngine = sharedPref.getString(TTS_ENGINE, "Android TTS") ?: "Android TTS"
         kokoroServerUrl =
-            sharedPref.getString("kokoro_server_url", "http://192.168.1.100:8880") ?: "http://192.168.1.100:8880"
+            sharedPref.getString(KOKORO_SERVER_URL, "http://192.168.1.100:8880") ?: "http://192.168.1.100:8880"
+
+        // Load settings specific to the selected engine
+        loadSettingsForEngine(selectedTTSEngine, sharedPref)
 
         if (selectedTTSEngine == "Kokoro TTS") {
             // Initialize Kokoro TTS client
@@ -95,6 +98,18 @@ class TTSManager(private val context: Context) {
                 }
             }
         }
+    }
+
+    private fun loadSettingsForEngine(engine: String, sharedPref: SharedPreferences) {
+        // Determine which keys to use based on the engine
+        val rateKey = if (engine == "Kokoro TTS") TTS_RATE_KOKORO else TTS_RATE_ANDROID
+        val pitchKey = if (engine == "Kokoro TTS") TTS_PITCH_KOKORO else TTS_PITCH_ANDROID
+        val voiceKey = if (engine == "Kokoro TTS") TTS_VOICE_KOKORO else TTS_VOICE_ANDROID
+
+        // Load the settings from SharedPreferences
+        speechRate = sharedPref.getFloat(rateKey, 1.0f)
+        pitch = sharedPref.getFloat(pitchKey, 1.0f)
+        voiceName = sharedPref.getString(voiceKey, null)
     }
 
     fun speak(text: String) {
@@ -331,6 +346,9 @@ class TTSManager(private val context: Context) {
         if (selectedTTSEngine == "Android TTS" && tts != null) {
             tts?.setSpeechRate(speechRate)
         }
+
+        // Save the setting to SharedPreferences for the current engine
+        saveSettingToPreferences()
         return true
     }
 
@@ -346,6 +364,9 @@ class TTSManager(private val context: Context) {
         if (selectedTTSEngine == "Android TTS" && tts != null) {
             tts?.setPitch(pitch)
         }
+
+        // Save the setting to SharedPreferences for the current engine
+        saveSettingToPreferences()
         return true
     }
 
@@ -376,14 +397,21 @@ class TTSManager(private val context: Context) {
         this.voiceName = voiceName
         if (selectedTTSEngine == "Android TTS" && tts != null) {
             val selectedVoice = tts?.voices?.find { it.name == voiceName }
-            return if (selectedVoice != null) {
+            val result = if (selectedVoice != null) {
                 tts?.voice = selectedVoice
                 true
             } else {
                 false
             }
+
+            // Save the setting to SharedPreferences for the current engine
+            saveSettingToPreferences()
+            return result
         }
         // For Kokoro TTS, we just store the voice name to use later
+
+        // Save the setting to SharedPreferences for the current engine
+        saveSettingToPreferences()
         return true
     }
 
@@ -412,7 +440,39 @@ class TTSManager(private val context: Context) {
         // For Kokoro TTS, settings are applied at synthesis time
     }
 
+    private fun saveSettingToPreferences() {
+        val sharedPref = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+
+        // Determine which keys to use based on the current engine
+        val rateKey = if (selectedTTSEngine == "Kokoro TTS") TTS_RATE_KOKORO else TTS_RATE_ANDROID
+        val pitchKey = if (selectedTTSEngine == "Kokoro TTS") TTS_PITCH_KOKORO else TTS_PITCH_ANDROID
+        val voiceKey = if (selectedTTSEngine == "Kokoro TTS") TTS_VOICE_KOKORO else TTS_VOICE_ANDROID
+
+        with(sharedPref.edit()) {
+            putFloat(rateKey, speechRate)
+            putFloat(pitchKey, pitch)
+            putString(voiceKey, voiceName)
+            apply()
+        }
+    }
+
     companion object {
+        // SharedPreferences keys for Android TTS settings (matching AppSettingsFragment)
+        private const val TTS_RATE_ANDROID = "tts_rate_android"
+        private const val TTS_PITCH_ANDROID = "tts_pitch_android"
+        private const val TTS_VOICE_ANDROID = "tts_voice_android"
+        private const val TTS_LANGUAGE_ANDROID = "tts_language_android"
+
+        // SharedPreferences keys for Kokoro TTS settings (matching AppSettingsFragment)
+        private const val TTS_RATE_KOKORO = "tts_rate_kokoro"
+        private const val TTS_PITCH_KOKORO = "tts_pitch_kokoro"
+        private const val TTS_VOICE_KOKORO = "tts_voice_kokoro"
+        private const val TTS_LANGUAGE_KOKORO = "tts_language_kokoro"
+
+        // Common keys that apply to both engines
+        private const val TTS_ENGINE = "tts_engine"
+        private const val KOKORO_SERVER_URL = "kokoro_server_url"
+
         @Volatile
         private var INSTANCE: TTSManager? = null
 

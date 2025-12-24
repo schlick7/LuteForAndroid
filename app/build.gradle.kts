@@ -14,8 +14,8 @@ android {
         applicationId = "com.example.luteforandroidv2"
         minSdk = 26
         targetSdk = 33
-        versionCode = 1093 // Using the patch number from strings.xml as versionCode
-        versionName = "0.5.20" // Matching the version in strings.xml
+        versionCode = 1094 // Using the patch number from strings.xml as versionCode
+        versionName = "0.5.21" // Matching the version in strings.xml
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
