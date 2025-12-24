@@ -5,8 +5,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.Toast
+import android.widget.*
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import com.example.luteforandroidv2.R
 import com.example.luteforandroidv2.databinding.FragmentAppSettingsBinding
@@ -26,8 +26,48 @@ import org.jsoup.Jsoup
 class AppSettingsFragment : Fragment() {
 
     private var _binding: FragmentAppSettingsBinding? = null
-    private val binding
-        get() = _binding!!
+    private val binding get() = _binding!!
+
+    // Dynamic views for collapsible sections
+    private lateinit var serverUrlEditText: EditText
+    private lateinit var statusTextView: TextView
+    private lateinit var saveUrlButton: Button
+    private lateinit var languageSpinner: Spinner
+    private lateinit var visibilitySpinner: Spinner
+    private lateinit var saveLanguageButton: Button
+    private lateinit var themeModeSpinner: Spinner
+    private lateinit var nativeReaderThemeModeSpinner: Spinner
+    private lateinit var backgroundColorLabel: TextView
+    private lateinit var backgroundColorEditText: EditText
+    private lateinit var textColorLabel: TextView
+    private lateinit var textColorEditText: EditText
+    private lateinit var cssInjectionCheckbox: CheckBox
+    private lateinit var saveThemeButton: Button
+    private lateinit var defaultReaderSpinner: Spinner
+    private lateinit var saveDefaultReaderButton: Button
+    private lateinit var defaultBooksSpinner: Spinner
+    private lateinit var saveDefaultBooksButton: Button
+    private lateinit var aiEndpointEditText: EditText
+    private lateinit var aiApiKeyEditText: EditText
+    private lateinit var aiModelEditText: EditText
+    private lateinit var aiPromptTermEditText: EditText
+    private lateinit var aiPromptSentenceEditText: EditText
+    private lateinit var showAiButtonTermCheckbox: CheckBox
+    private lateinit var showAiButtonSentenceCheckbox: CheckBox
+    private lateinit var saveAiButton: Button
+    private lateinit var showAiInstructionsButton: Button
+    private lateinit var ttsEngineSpinner: Spinner
+    private lateinit var kokoroUrlLabel: TextView
+    private lateinit var kokoroUrlEditText: EditText
+    private lateinit var ttsLanguageSpinner: Spinner
+    private lateinit var speechRateSeekBar: SeekBar
+    private lateinit var speechRateValueTextView: TextView
+    private lateinit var speechPitchSeekBar: SeekBar
+    private lateinit var speechPitchValueTextView: TextView
+    private lateinit var voiceEditText: EditText
+    private lateinit var showVoicesButton: Button
+    private lateinit var saveTtsButton: Button
+
     private lateinit var serverSettingsManager: ServerSettingsManager
     private lateinit var languageAdapter: ArrayAdapter<String>
     private lateinit var visibilityAdapter: ArrayAdapter<String>
@@ -38,7 +78,6 @@ class AppSettingsFragment : Fragment() {
     private lateinit var aiSettingsManager: AiSettingsManager
     private lateinit var ttsEngineAdapter: ArrayAdapter<String>
     private lateinit var ttsLanguageAdapter: ArrayAdapter<String>
-    // TTS voice is now a text input field instead of spinner
 
     companion object {
         // SharedPreferences keys for Android TTS settings
@@ -76,22 +115,63 @@ class AppSettingsFragment : Fragment() {
         // Initialize AI settings manager
         aiSettingsManager = AiSettingsManager.getInstance(requireContext())
 
-        // Set up language selection spinner by fetching languages from server
-        setupLanguageSelection()
+        // Initialize collapsible sections with dynamic views
+        initializeCollapsibleSections()
+    }
 
-        // Load the current server URL and settings
+    private fun initializeCollapsibleSections() {
+        // Create all the views that were previously in the layout
+        createDynamicViews()
+
+        // Create the collapsible section views dynamically
+        val serverConfigSection = binding.root.findViewById<CollapsibleSectionView>(R.id.server_config_section)
+        val headerDisplaySection = binding.root.findViewById<CollapsibleSectionView>(R.id.header_display_section)
+        val themeSettingsSection = binding.root.findViewById<CollapsibleSectionView>(R.id.theme_settings_section)
+        val defaultViewsSection = binding.root.findViewById<CollapsibleSectionView>(R.id.default_views_section)
+        val aiSettingsSection = binding.root.findViewById<CollapsibleSectionView>(R.id.ai_settings_section)
+        val ttsSettingsSection = binding.root.findViewById<CollapsibleSectionView>(R.id.tts_settings_section)
+
+        // Set titles for each section
+        serverConfigSection.setTitle("Server Configuration")
+        headerDisplaySection.setTitle("Header Display Settings")
+        themeSettingsSection.setTitle("Theme Settings")
+        defaultViewsSection.setTitle("Default Views Settings")
+        aiSettingsSection.setTitle("AI Settings")
+        ttsSettingsSection.setTitle("TTS Settings")
+
+        // Create content for each section
+        val serverConfigContent = createServerConfigContent()
+        val headerDisplayContent = createHeaderDisplayContent()
+        val themeSettingsContent = createThemeSettingsContent()
+        val defaultViewsContent = createDefaultViewsContent()
+        val aiSettingsContent = createAiSettingsContent()
+        val ttsSettingsContent = createTtsSettingsContent()
+
+        // Set content for each section
+        serverConfigSection.setContent(serverConfigContent)
+        headerDisplaySection.setContent(headerDisplayContent)
+        themeSettingsSection.setContent(themeSettingsContent)
+        defaultViewsSection.setContent(defaultViewsContent)
+        aiSettingsSection.setContent(aiSettingsContent)
+        ttsSettingsSection.setContent(ttsSettingsContent)
+
+        // Expand the first section by default
+        serverConfigSection.expand()
+
+        // Set up all the functionality after creating the views
+        setupLanguageSelection()
         loadCurrentSettings()
 
         // Set up the save buttons
-        binding.buttonSaveSettings.setOnClickListener { saveUrlSettings() }
+        saveUrlButton.setOnClickListener { saveUrlSettings() }
 
         // Combined button for header display settings (language + visibility)
-        binding.buttonSaveLanguage.setOnClickListener {
+        saveLanguageButton.setOnClickListener {
             saveLanguageSettings()
             saveVisibilitySettings()
             // Show combined success message
-            binding.textViewStatus.text = "Header display settings saved successfully!"
-            binding.textViewStatus.setTextColor(
+            statusTextView.text = "Header display settings saved successfully!"
+            statusTextView.setTextColor(
                 resources.getColor(android.R.color.holo_green_dark, null)
             )
             Toast.makeText(
@@ -102,7 +182,7 @@ class AppSettingsFragment : Fragment() {
                 .show()
         }
 
-        binding.buttonSaveTheme.setOnClickListener { saveThemeSettings() }
+        saveThemeButton.setOnClickListener { saveThemeSettings() }
 
         // Set up the visibility selection spinner
         setupVisibilitySelection()
@@ -123,16 +203,16 @@ class AppSettingsFragment : Fragment() {
         setupDefaultBooksSelection()
 
         // Set up the save default reader button
-        binding.buttonSaveDefaultReader.setOnClickListener { saveDefaultReaderSettings() }
+        saveDefaultReaderButton.setOnClickListener { saveDefaultReaderSettings() }
 
         // Set up the save default books button
-        binding.buttonSaveDefaultBooks.setOnClickListener { saveDefaultBooksSettings() }
+        saveDefaultBooksButton.setOnClickListener { saveDefaultBooksSettings() }
 
         // Set up the save AI settings button
-        binding.buttonSaveAiSettings.setOnClickListener { saveAiSettings() }
+        saveAiButton.setOnClickListener { saveAiSettings() }
 
         // Set up the show AI instructions button
-        binding.buttonShowAiInstructions.setOnClickListener { showAiInstructions() }
+        showAiInstructionsButton.setOnClickListener { showAiInstructions() }
 
         // Load AI settings
         loadAiSettings()
@@ -141,7 +221,7 @@ class AppSettingsFragment : Fragment() {
         setupTtsEngineSelection()
 
         // Set up the save TTS settings button
-        binding.buttonSaveTtsSettings.setOnClickListener { saveTtsSettings() }
+        saveTtsButton.setOnClickListener { saveTtsSettings() }
 
         // Set up speech rate SeekBar
         setupTtsRateSeekBar()
@@ -154,6 +234,449 @@ class AppSettingsFragment : Fragment() {
 
         // Load TTS settings
         loadTtsSettings()
+    }
+
+    private fun createDynamicViews() {
+        // Create all the views that were previously in the layout
+        serverUrlEditText = EditText(requireContext()).apply {
+            hint = "Enter server URL (e.g., http://192.168.1.100:5001)"
+            inputType = android.text.InputType.TYPE_TEXT_VARIATION_URI
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            setHintTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_surface, null))
+        }
+
+        statusTextView = TextView(requireContext()).apply {
+            textSize = 14f
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+        }
+
+        saveUrlButton = Button(requireContext()).apply {
+            text = "Save URL"
+        }
+
+        languageSpinner = Spinner(requireContext())
+
+        visibilitySpinner = Spinner(requireContext())
+
+        saveLanguageButton = Button(requireContext()).apply {
+            text = "Save Header Display Settings"
+        }
+
+        themeModeSpinner = Spinner(requireContext())
+
+        nativeReaderThemeModeSpinner = Spinner(requireContext())
+
+        backgroundColorLabel = TextView(requireContext()).apply {
+            text = "Background Color"
+            textSize = 16f
+            setTypeface(null, android.graphics.Typeface.NORMAL)
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            visibility = View.GONE
+        }
+
+        backgroundColorEditText = EditText(requireContext()).apply {
+            hint = "Enter hex color (e.g., #FFFFFF)"
+            inputType = android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            setHintTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_surface, null))
+            visibility = View.GONE
+        }
+
+        textColorLabel = TextView(requireContext()).apply {
+            text = "Text Color"
+            textSize = 16f
+            setTypeface(null, android.graphics.Typeface.NORMAL)
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            visibility = View.GONE
+        }
+
+        textColorEditText = EditText(requireContext()).apply {
+            hint = "Enter hex color (e.g., #000000)"
+            inputType = android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            setHintTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_surface, null))
+            visibility = View.GONE
+        }
+
+        cssInjectionCheckbox = CheckBox(requireContext()).apply {
+            text = "Disable CSS Injection"
+            textSize = 16f
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+        }
+
+        saveThemeButton = Button(requireContext()).apply {
+            text = "Save Theme Settings"
+        }
+
+        defaultReaderSpinner = Spinner(requireContext())
+
+        saveDefaultReaderButton = Button(requireContext()).apply {
+            text = "Save Default Reader"
+        }
+
+        defaultBooksSpinner = Spinner(requireContext())
+
+        saveDefaultBooksButton = Button(requireContext()).apply {
+            text = "Save Default Books"
+        }
+
+        aiEndpointEditText = EditText(requireContext()).apply {
+            hint = "http://192.168.1.100:11434/v1/chat/completions"
+            inputType = android.text.InputType.TYPE_TEXT_VARIATION_URI
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            setHintTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_surface, null))
+        }
+
+        aiApiKeyEditText = EditText(requireContext()).apply {
+            hint = "Enter API key (e.g., for OpenAI)"
+            inputType = android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            setHintTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_surface, null))
+        }
+
+        aiModelEditText = EditText(requireContext()).apply {
+            hint = "Enter AI model name (e.g., llama2, mistral, phi)"
+            inputType = android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            setHintTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_surface, null))
+        }
+
+        aiPromptTermEditText = EditText(requireContext()).apply {
+            hint = "Enter AI prompt for term translation (use {term} as placeholder)"
+            inputType = android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            minLines = 2
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            setHintTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_surface, null))
+        }
+
+        aiPromptSentenceEditText = EditText(requireContext()).apply {
+            hint = "Enter AI prompt for sentence processing (use {sentence} as placeholder)"
+            inputType = android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            minLines = 2
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            setHintTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_surface, null))
+        }
+
+        showAiButtonTermCheckbox = CheckBox(requireContext()).apply {
+            text = "Show AI Button in Term Form"
+            isChecked = true
+        }
+
+        showAiButtonSentenceCheckbox = CheckBox(requireContext()).apply {
+            text = "Show AI Button in Sentence Reader"
+            isChecked = true
+        }
+
+        saveAiButton = Button(requireContext()).apply {
+            text = "Save AI Settings"
+        }
+
+        showAiInstructionsButton = Button(requireContext()).apply {
+            text = "Show AI Integration Instructions"
+        }
+
+        ttsEngineSpinner = Spinner(requireContext())
+
+        kokoroUrlLabel = TextView(requireContext()).apply {
+            text = "Kokoro Server URL"
+            textSize = 16f
+            setTypeface(null, android.graphics.Typeface.NORMAL)
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            visibility = View.GONE
+        }
+
+        kokoroUrlEditText = EditText(requireContext()).apply {
+            hint = "Enter Kokoro server URL (e.g., http://192.168.1.100:8880)"
+            inputType = android.text.InputType.TYPE_TEXT_VARIATION_URI
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            setHintTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_surface, null))
+            visibility = View.GONE
+        }
+
+        ttsLanguageSpinner = Spinner(requireContext())
+
+        speechRateSeekBar = SeekBar(requireContext()).apply {
+            max = 150
+            progress = 50
+        }
+
+        speechRateValueTextView = TextView(requireContext()).apply {
+            text = "Current rate: 1.0x"
+            textSize = 14f
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            gravity = android.view.Gravity.CENTER
+        }
+
+        speechPitchSeekBar = SeekBar(requireContext()).apply {
+            max = 40
+            progress = 20
+        }
+
+        speechPitchValueTextView = TextView(requireContext()).apply {
+            text = "Current pitch: 1.0x"
+            textSize = 14f
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            gravity = android.view.Gravity.CENTER
+        }
+
+        voiceEditText = EditText(requireContext()).apply {
+            hint = "Enter voice name(s) (e.g., af_bella or af_bella+af_heart)"
+            inputType = android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            setHintTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_surface, null))
+        }
+
+        showVoicesButton = Button(requireContext()).apply {
+            text = "Show Voices"
+        }
+
+        saveTtsButton = Button(requireContext()).apply {
+            text = "Save TTS Settings"
+        }
+    }
+
+    private fun createServerConfigContent(): View {
+        val layout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // Add server URL input
+        val serverUrlLabel = createTextView("Server URL")
+        layout.addView(serverUrlLabel)
+        layout.addView(serverUrlEditText)
+        layout.addView(saveUrlButton)
+        layout.addView(statusTextView)
+
+        // Add instructions
+        val instructionsLabel = createTextView("Instructions", 18f, true)
+        val instructionText1 =
+            createTextView("Enter the full URL of your Lute server including the protocol (http:// or https://) and port number. For example:")
+        val instructionText2 = createTextView("• http://192.168.1.100:5001")
+        val instructionText3 = createTextView("• https://yourdomain.com:5001")
+        val instructionText4 = createTextView("• http://localhost:5001")
+
+        layout.addView(instructionsLabel)
+        layout.addView(instructionText1)
+        layout.addView(instructionText2)
+        layout.addView(instructionText3)
+        layout.addView(instructionText4)
+
+        return layout
+    }
+
+    private fun createHeaderDisplayContent(): View {
+        val layout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // Add language selection
+        val languageLabel = createTextView("Language for Word Count Display")
+        layout.addView(languageLabel)
+        layout.addView(languageSpinner)
+
+        // Add visibility selection
+        val visibilityLabel = createTextView("Word Count Visibility")
+        layout.addView(visibilityLabel)
+        layout.addView(visibilitySpinner)
+
+        // Add save button
+        layout.addView(saveLanguageButton)
+
+        return layout
+    }
+
+    private fun createThemeSettingsContent(): View {
+        val layout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // Add theme mode selection
+        val themeModeLabel = createTextView("Theme Mode")
+        layout.addView(themeModeLabel)
+        layout.addView(themeModeSpinner)
+
+        // Add native reader theme section
+        val nativeReaderThemeLabel = createTextView("Native Reader Theme", 18f, true)
+        layout.addView(nativeReaderThemeLabel)
+
+        val nativeReaderThemeModeLabel = createTextView("Theme Mode")
+        layout.addView(nativeReaderThemeModeLabel)
+        layout.addView(nativeReaderThemeModeSpinner)
+
+        // Add background color fields (initially hidden, shown based on selection)
+        layout.addView(backgroundColorLabel)
+        layout.addView(backgroundColorEditText)
+        layout.addView(textColorLabel)
+        layout.addView(textColorEditText)
+
+        // Add CSS injection checkbox
+        layout.addView(cssInjectionCheckbox)
+
+        // Add save button
+        layout.addView(saveThemeButton)
+
+        return layout
+    }
+
+    private fun createDefaultViewsContent(): View {
+        val layout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // Add default reader settings
+        val defaultReaderLabel = createTextView("Default Reader")
+        layout.addView(defaultReaderLabel)
+        layout.addView(defaultReaderSpinner)
+        layout.addView(saveDefaultReaderButton)
+
+        // Add default books settings
+        val defaultBooksLabel = createTextView("Default Books View")
+        layout.addView(defaultBooksLabel)
+        layout.addView(defaultBooksSpinner)
+        layout.addView(saveDefaultBooksButton)
+
+        return layout
+    }
+
+    private fun createAiSettingsContent(): View {
+        val layout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // Add AI endpoint
+        val aiEndpointLabel = createTextView("OpenAI Endpoint URL - /v1/chat/completions")
+        layout.addView(aiEndpointLabel)
+        layout.addView(aiEndpointEditText)
+
+        // Add AI API key
+        val aiApiKeyLabel = createTextView("AI API Key (Leave blank for Local)")
+        layout.addView(aiApiKeyLabel)
+        layout.addView(aiApiKeyEditText)
+
+        // Add AI model name
+        val aiModelLabel = createTextView("AI Model Name")
+        layout.addView(aiModelLabel)
+        layout.addView(aiModelEditText)
+
+        // Add AI prompt for term form
+        val aiPromptTermLabel = createTextView("AI Prompt for Term Form")
+        layout.addView(aiPromptTermLabel)
+        layout.addView(aiPromptTermEditText)
+
+        // Add AI prompt for sentence reader
+        val aiPromptSentenceLabel = createTextView("AI Prompt for Sentence Reader")
+        layout.addView(aiPromptSentenceLabel)
+        layout.addView(aiPromptSentenceEditText)
+
+        // Add checkboxes
+        val checkboxLayout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        checkboxLayout.addView(showAiButtonTermCheckbox)
+        checkboxLayout.addView(showAiButtonSentenceCheckbox)
+        layout.addView(checkboxLayout)
+
+        // Add save and instructions buttons
+        layout.addView(saveAiButton)
+        layout.addView(showAiInstructionsButton)
+
+        return layout
+    }
+
+    private fun createTtsSettingsContent(): View {
+        val layout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // Add TTS engine selection
+        val ttsEngineLabel = createTextView("TTS Engine")
+        layout.addView(ttsEngineLabel)
+        layout.addView(ttsEngineSpinner)
+
+        // Add Kokoro server URL (initially hidden)
+        layout.addView(kokoroUrlLabel)
+        layout.addView(kokoroUrlEditText)
+
+        // Add TTS language selection
+        val ttsLanguageLabel = createTextView("TTS Language")
+        layout.addView(ttsLanguageLabel)
+        layout.addView(ttsLanguageSpinner)
+
+        // Add speech rate
+        val speechRateLabel = createTextView("Speech Rate")
+        layout.addView(speechRateLabel)
+        layout.addView(speechRateSeekBar)
+        layout.addView(speechRateValueTextView)
+
+        // Add speech pitch
+        val speechPitchLabel = createTextView("Speech Pitch")
+        layout.addView(speechPitchLabel)
+        layout.addView(speechPitchSeekBar)
+        layout.addView(speechPitchValueTextView)
+
+        // Add voice selection
+        val voiceSelectionLabel = createTextView("Voice Selection")
+        val voiceSelectionLayout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        voiceSelectionLayout.addView(voiceEditText)
+        voiceSelectionLayout.addView(showVoicesButton)
+        layout.addView(voiceSelectionLabel)
+        layout.addView(voiceSelectionLayout)
+
+        // Add save button
+        layout.addView(saveTtsButton)
+
+        return layout
+    }
+
+    private fun createTextView(text: String, size: Float = 16f, isBold: Boolean = false): TextView {
+        return TextView(requireContext()).apply {
+            this.text = text
+            this.textSize = size
+            setTypeface(null, if (isBold) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
+            setTextColor(ResourcesCompat.getColor(resources, R.color.lute_on_background, null))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 24) // 8dp in pixels
+            }
+        }
     }
 
     fun setupLanguageSelection() {
@@ -178,7 +701,7 @@ class AppSettingsFragment : Fragment() {
                     languageAdapter =
                         ArrayAdapter(requireContext(), R.layout.spinner_item, languageArray)
                     languageAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-                    binding.spinnerLanguageSelection.adapter = languageAdapter
+                    languageSpinner.adapter = languageAdapter
 
                     // Load previously selected language, defaulting to first available language
                     val sharedPref =
@@ -191,10 +714,10 @@ class AppSettingsFragment : Fragment() {
                         )
                     val position = languageArray.indexOf(selectedLanguage)
                     if (position >= 0) {
-                        binding.spinnerLanguageSelection.setSelection(position)
+                        languageSpinner.setSelection(position)
                     } else {
                         // Default to first language in the list
-                        binding.spinnerLanguageSelection.setSelection(0)
+                        languageSpinner.setSelection(0)
                     }
                 } catch (e: Exception) {
                     android.util.Log.e(
@@ -207,7 +730,7 @@ class AppSettingsFragment : Fragment() {
                     languageAdapter =
                         ArrayAdapter(requireContext(), R.layout.spinner_item, defaultLanguages)
                     languageAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-                    binding.spinnerLanguageSelection.adapter = languageAdapter
+                    languageSpinner.adapter = languageAdapter
 
                     // Load previously selected language
                     val sharedPref =
@@ -216,10 +739,10 @@ class AppSettingsFragment : Fragment() {
                     val selectedLanguage = sharedPref.getString("selected_language", "Auto")
                     val position = defaultLanguages.indexOf(selectedLanguage)
                     if (position >= 0) {
-                        binding.spinnerLanguageSelection.setSelection(position)
+                        languageSpinner.setSelection(position)
                     } else {
                         // Default to "Auto"
-                        binding.spinnerLanguageSelection.setSelection(0)
+                        languageSpinner.setSelection(0)
                     }
                 }
             }
@@ -291,30 +814,30 @@ class AppSettingsFragment : Fragment() {
     private fun loadCurrentSettings() {
         val currentUrl = serverSettingsManager.getServerUrl()
         if (currentUrl.isNotEmpty()) {
-            binding.editTextServerUrl.setText(currentUrl)
-            binding.textViewStatus.text = "Current server URL loaded"
+            serverUrlEditText.setText(currentUrl)
+            statusTextView.text = "Current server URL loaded"
         } else {
             // Set placeholder text if no URL is configured
-            binding.editTextServerUrl.hint = "Enter server URL (e.g., http://192.168.1.100:5001)"
-            binding.textViewStatus.text = "No server URL configured"
+            serverUrlEditText.hint = "Enter server URL (e.g., http://192.168.1.100:5001)"
+            statusTextView.text = "No server URL configured"
         }
     }
 
     private fun saveUrlSettings() {
-        val serverUrl = binding.editTextServerUrl.text.toString().trim()
+        val serverUrl = serverUrlEditText.text.toString().trim()
 
         if (serverUrl.isEmpty()) {
-            binding.textViewStatus.text = "Please enter a server URL"
-            binding.textViewStatus.setTextColor(
+            statusTextView.text = "Please enter a server URL"
+            statusTextView.setTextColor(
                 resources.getColor(android.R.color.holo_red_dark, null)
             )
             return
         }
 
         if (!serverSettingsManager.isValidUrl(serverUrl)) {
-            binding.textViewStatus.text =
+            statusTextView.text =
                 "Please enter a valid URL starting with http:// or https://"
-            binding.textViewStatus.setTextColor(
+            statusTextView.setTextColor(
                 resources.getColor(android.R.color.holo_red_dark, null)
             )
             return
@@ -357,8 +880,8 @@ class AppSettingsFragment : Fragment() {
         }
 
         // Update the status
-        binding.textViewStatus.text = "URL saved successfully!"
-        binding.textViewStatus.setTextColor(
+        statusTextView.text = "URL saved successfully!"
+        statusTextView.setTextColor(
             resources.getColor(android.R.color.holo_green_dark, null)
         )
 
@@ -390,7 +913,7 @@ class AppSettingsFragment : Fragment() {
 
     private fun saveLanguageSettings() {
         // Save the selected language
-        val selectedLanguage = binding.spinnerLanguageSelection.selectedItem.toString()
+        val selectedLanguage = languageSpinner.selectedItem.toString()
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("selected_language", selectedLanguage)
@@ -413,7 +936,7 @@ class AppSettingsFragment : Fragment() {
 
     private fun testServerConnectivity(serverUrl: String) {
         CoroutineScope(Dispatchers.Main).launch {
-            binding.textViewStatus.append("\nTesting server connectivity...")
+            statusTextView.append("\nTesting server connectivity...")
 
             val isReachable =
                 withContext(Dispatchers.IO) {
@@ -436,8 +959,8 @@ class AppSettingsFragment : Fragment() {
                 }
 
             if (isReachable) {
-                binding.textViewStatus.append("\nServer is reachable")
-                binding.textViewStatus.setTextColor(
+                statusTextView.append("\nServer is reachable")
+                statusTextView.setTextColor(
                     resources.getColor(android.R.color.holo_green_dark, null)
                 )
 
@@ -449,11 +972,11 @@ class AppSettingsFragment : Fragment() {
                 )
                     .show()
 
-                // Restart the app to ensure proper navigation state
+                // Restart the app to ensure proper theme application
                 restartApp()
             } else {
-                binding.textViewStatus.append("\nServer not available")
-                binding.textViewStatus.setTextColor(
+                statusTextView.append("\nServer not available")
+                statusTextView.setTextColor(
                     resources.getColor(android.R.color.holo_red_dark, null)
                 )
             }
@@ -509,23 +1032,23 @@ class AppSettingsFragment : Fragment() {
         val visibilityOptions = arrayOf("Visible", "Hidden")
         visibilityAdapter = ArrayAdapter(requireContext(), R.layout.spinner_item, visibilityOptions)
         visibilityAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-        binding.spinnerWordCountVisibility.adapter = visibilityAdapter
+        visibilitySpinner.adapter = visibilityAdapter
 
         // Load previously selected visibility setting
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         val selectedVisibility = sharedPref.getString("word_count_visibility", "Visible")
         val position = visibilityOptions.indexOf(selectedVisibility)
         if (position >= 0) {
-            binding.spinnerWordCountVisibility.setSelection(position)
+            visibilitySpinner.setSelection(position)
         } else {
             // Default to "Visible"
-            binding.spinnerWordCountVisibility.setSelection(0)
+            visibilitySpinner.setSelection(0)
         }
     }
 
     private fun saveVisibilitySettings() {
         // Save the selected visibility
-        val selectedVisibility = binding.spinnerWordCountVisibility.selectedItem.toString()
+        val selectedVisibility = visibilitySpinner.selectedItem.toString()
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("word_count_visibility", selectedVisibility)
@@ -550,17 +1073,17 @@ class AppSettingsFragment : Fragment() {
         val themeModeOptions = arrayOf("App Theme", "Auto Theme")
         themeModeAdapter = ArrayAdapter(requireContext(), R.layout.spinner_item, themeModeOptions)
         themeModeAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-        binding.spinnerThemeMode.adapter = themeModeAdapter
+        themeModeSpinner.adapter = themeModeAdapter
 
         // Load previously selected theme mode setting
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         val selectedThemeMode = sharedPref.getString("theme_mode", "App Theme")
         val position = themeModeOptions.indexOf(selectedThemeMode)
         if (position >= 0) {
-            binding.spinnerThemeMode.setSelection(position)
+            themeModeSpinner.setSelection(position)
         } else {
             // Default to "App Theme"
-            binding.spinnerThemeMode.setSelection(0)
+            themeModeSpinner.setSelection(0)
         }
     }
 
@@ -571,7 +1094,7 @@ class AppSettingsFragment : Fragment() {
         nativeReaderThemeModeAdapter =
             ArrayAdapter(requireContext(), R.layout.spinner_item, themeModeOptions)
         nativeReaderThemeModeAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-        binding.spinnerNativeReaderThemeMode.adapter = nativeReaderThemeModeAdapter
+        nativeReaderThemeModeSpinner.adapter = nativeReaderThemeModeAdapter
 
         // Load previously selected native reader theme mode setting
         val sharedPref =
@@ -579,14 +1102,14 @@ class AppSettingsFragment : Fragment() {
         val selectedThemeMode = sharedPref.getString("native_reader_theme_mode", "App Settings")
         val position = themeModeOptions.indexOf(selectedThemeMode)
         if (position >= 0) {
-            binding.spinnerNativeReaderThemeMode.setSelection(position)
+            nativeReaderThemeModeSpinner.setSelection(position)
         } else {
             // Default to "App Settings"
-            binding.spinnerNativeReaderThemeMode.setSelection(0)
+            nativeReaderThemeModeSpinner.setSelection(0)
         }
 
         // Set up listener to show/hide textboxes based on selection
-        binding.spinnerNativeReaderThemeMode.onItemSelectedListener =
+        nativeReaderThemeModeSpinner.onItemSelectedListener =
             object : android.widget.AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(
                     parent: android.widget.AdapterView<*>,
@@ -597,40 +1120,39 @@ class AppSettingsFragment : Fragment() {
                     when (position) {
                         0 -> { // App Settings
                             // Hide textboxes
-                            binding.textViewBackgroundColorLabel.visibility =
-                                android.view.View.GONE
-                            binding.editTextBackgroundColor.visibility = android.view.View.GONE
-                            binding.textViewTextColorLabel.visibility = android.view.View.GONE
-                            binding.editTextTextColor.visibility = android.view.View.GONE
+                            backgroundColorLabel.visibility = android.view.View.GONE
+                            backgroundColorEditText.visibility = android.view.View.GONE
+                            textColorLabel.visibility = android.view.View.GONE
+                            textColorEditText.visibility = android.view.View.GONE
                         }
 
                         1 -> { // Custom
                             // Show textboxes
-                            binding.textViewBackgroundColorLabel.visibility =
+                            backgroundColorLabel.visibility =
                                 android.view.View.VISIBLE
-                            binding.editTextBackgroundColor.visibility =
+                            backgroundColorEditText.visibility =
                                 android.view.View.VISIBLE
-                            binding.textViewTextColorLabel.visibility =
+                            textColorLabel.visibility =
                                 android.view.View.VISIBLE
-                            binding.editTextTextColor.visibility = android.view.View.VISIBLE
+                            textColorEditText.visibility = android.view.View.VISIBLE
                         }
                     }
                 }
 
                 override fun onNothingSelected(parent: android.widget.AdapterView<*>) {
                     // Hide textboxes by default
-                    binding.textViewBackgroundColorLabel.visibility = android.view.View.GONE
-                    binding.editTextBackgroundColor.visibility = android.view.View.GONE
-                    binding.textViewTextColorLabel.visibility = android.view.View.GONE
-                    binding.editTextTextColor.visibility = android.view.View.GONE
+                    backgroundColorLabel.visibility = android.view.View.GONE
+                    backgroundColorEditText.visibility = android.view.View.GONE
+                    textColorLabel.visibility = android.view.View.GONE
+                    textColorEditText.visibility = android.view.View.GONE
                 }
             }
 
         // Trigger the listener to set initial visibility
-        binding.spinnerNativeReaderThemeMode.onItemSelectedListener?.onItemSelected(
-            binding.spinnerNativeReaderThemeMode,
+        nativeReaderThemeModeSpinner.onItemSelectedListener?.onItemSelected(
+            nativeReaderThemeModeSpinner,
             null,
-            binding.spinnerNativeReaderThemeMode.selectedItemPosition,
+            nativeReaderThemeModeSpinner.selectedItemPosition,
             0
         )
     }
@@ -647,28 +1169,28 @@ class AppSettingsFragment : Fragment() {
         val themeModeOptions = arrayOf("App Settings", "Custom")
         val position = themeModeOptions.indexOf(themeMode)
         if (position >= 0) {
-            binding.spinnerNativeReaderThemeMode.setSelection(position)
+            nativeReaderThemeModeSpinner.setSelection(position)
         } else {
             // Default to "App Settings"
-            binding.spinnerNativeReaderThemeMode.setSelection(0)
+            nativeReaderThemeModeSpinner.setSelection(0)
         }
 
         // Set text values
-        binding.editTextBackgroundColor.setText(backgroundColor)
-        binding.editTextTextColor.setText(textColor)
+        backgroundColorEditText.setText(backgroundColor)
+        textColorEditText.setText(textColor)
 
         // Trigger the listener to set initial visibility
-        binding.spinnerNativeReaderThemeMode.onItemSelectedListener?.onItemSelected(
-            binding.spinnerNativeReaderThemeMode,
+        nativeReaderThemeModeSpinner.onItemSelectedListener?.onItemSelected(
+            nativeReaderThemeModeSpinner,
             null,
-            binding.spinnerNativeReaderThemeMode.selectedItemPosition,
+            nativeReaderThemeModeSpinner.selectedItemPosition,
             0
         )
     }
 
     /** Save Native Reader Theme settings to SharedPreferences */
     private fun saveNativeReaderThemeSettings() {
-        val selectedThemeMode = binding.spinnerNativeReaderThemeMode.selectedItem.toString()
+        val selectedThemeMode = nativeReaderThemeModeSpinner.selectedItem.toString()
 
         val sharedPref =
             requireContext().getSharedPreferences("native_reader_theme", Context.MODE_PRIVATE)
@@ -677,21 +1199,21 @@ class AppSettingsFragment : Fragment() {
 
             // Only save custom colors if Custom mode is selected
             if (selectedThemeMode == "Custom") {
-                val backgroundColor = binding.editTextBackgroundColor.text.toString().trim()
-                val textColor = binding.editTextTextColor.text.toString().trim()
+                val backgroundColor = backgroundColorEditText.text.toString().trim()
+                val textColor = textColorEditText.text.toString().trim()
 
                 // Validate hex colors
                 if (backgroundColor.isNotEmpty() && !isValidHexColor(backgroundColor)) {
-                    binding.textViewStatus.text = "Invalid background color format. Use #RRGGBB."
-                    binding.textViewStatus.setTextColor(
+                    statusTextView.text = "Invalid background color format. Use #RRGGBB."
+                    statusTextView.setTextColor(
                         resources.getColor(android.R.color.holo_red_dark, null)
                     )
                     return
                 }
 
                 if (textColor.isNotEmpty() && !isValidHexColor(textColor)) {
-                    binding.textViewStatus.text = "Invalid text color format. Use #RRGGBB."
-                    binding.textViewStatus.setTextColor(
+                    statusTextView.text = "Invalid text color format. Use #RRGGBB."
+                    statusTextView.setTextColor(
                         resources.getColor(android.R.color.holo_red_dark, null)
                     )
                     return
@@ -723,23 +1245,23 @@ class AppSettingsFragment : Fragment() {
         defaultReaderAdapter =
             ArrayAdapter(requireContext(), R.layout.spinner_item, defaultReaderOptions)
         defaultReaderAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-        binding.spinnerDefaultReader.adapter = defaultReaderAdapter
+        defaultReaderSpinner.adapter = defaultReaderAdapter
 
         // Load previously selected default reader setting, defaulting to "Native Reader"
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         val selectedDefaultReader = sharedPref.getString("default_reader", "Native Reader")
         val position = defaultReaderOptions.indexOf(selectedDefaultReader)
         if (position >= 0) {
-            binding.spinnerDefaultReader.setSelection(position)
+            defaultReaderSpinner.setSelection(position)
         } else {
             // Default to "Native Reader"
-            binding.spinnerDefaultReader.setSelection(1) // Index 1 is "Native Reader"
+            defaultReaderSpinner.setSelection(1) // Index 1 is "Native Reader"
         }
     }
 
     private fun saveDefaultReaderSettings() {
         // Save the selected default reader
-        val selectedDefaultReader = binding.spinnerDefaultReader.selectedItem.toString()
+        val selectedDefaultReader = defaultReaderSpinner.selectedItem.toString()
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("default_reader", selectedDefaultReader)
@@ -747,8 +1269,8 @@ class AppSettingsFragment : Fragment() {
         }
 
         // Update the status
-        binding.textViewStatus.text = "Default reader settings saved successfully!"
-        binding.textViewStatus.setTextColor(
+        statusTextView.text = "Default reader settings saved successfully!"
+        statusTextView.setTextColor(
             resources.getColor(android.R.color.holo_green_dark, null)
         )
 
@@ -763,23 +1285,23 @@ class AppSettingsFragment : Fragment() {
         defaultBooksAdapter =
             ArrayAdapter(requireContext(), R.layout.spinner_item, defaultBooksOptions)
         defaultBooksAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-        binding.spinnerDefaultBooks.adapter = defaultBooksAdapter
+        defaultBooksSpinner.adapter = defaultBooksAdapter
 
         // Load previously selected default books setting, defaulting to "Native Books"
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         val selectedDefaultBooks = sharedPref.getString("default_books", "Native Books")
         val position = defaultBooksOptions.indexOf(selectedDefaultBooks)
         if (position >= 0) {
-            binding.spinnerDefaultBooks.setSelection(position)
+            defaultBooksSpinner.setSelection(position)
         } else {
             // Default to "Native Books"
-            binding.spinnerDefaultBooks.setSelection(1) // Index 1 is "Native Books"
+            defaultBooksSpinner.setSelection(1) // Index 1 is "Native Books"
         }
     }
 
     private fun saveDefaultBooksSettings() {
         // Save the selected default books
-        val selectedDefaultBooks = binding.spinnerDefaultBooks.selectedItem.toString()
+        val selectedDefaultBooks = defaultBooksSpinner.selectedItem.toString()
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("default_books", selectedDefaultBooks)
@@ -787,8 +1309,8 @@ class AppSettingsFragment : Fragment() {
         }
 
         // Update the status
-        binding.textViewStatus.text = "Default books settings saved successfully!"
-        binding.textViewStatus.setTextColor(
+        statusTextView.text = "Default books settings saved successfully!"
+        statusTextView.setTextColor(
             resources.getColor(android.R.color.holo_green_dark, null)
         )
 
@@ -799,13 +1321,13 @@ class AppSettingsFragment : Fragment() {
 
     private fun saveThemeSettings() {
         // Save the selected theme mode
-        val selectedThemeMode = binding.spinnerThemeMode.selectedItem.toString()
+        val selectedThemeMode = themeModeSpinner.selectedItem.toString()
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("theme_mode", selectedThemeMode)
 
             // Save the CSS injection setting
-            putBoolean("disable_css_injection", binding.checkboxDisableCssInjection.isChecked)
+            putBoolean("disable_css_injection", cssInjectionCheckbox.isChecked)
             apply()
         }
 
@@ -813,8 +1335,8 @@ class AppSettingsFragment : Fragment() {
         saveNativeReaderThemeSettings()
 
         // Update the status
-        binding.textViewStatus.text = "Theme settings saved successfully!"
-        binding.textViewStatus.setTextColor(
+        statusTextView.text = "Theme settings saved successfully!"
+        statusTextView.setTextColor(
             resources.getColor(android.R.color.holo_green_dark, null)
         )
 
@@ -856,18 +1378,18 @@ class AppSettingsFragment : Fragment() {
 
     private fun saveAiSettings() {
         // Get values from UI elements
-        val aiEndpoint = binding.editTextAiEndpoint.text.toString().trim()
-        val aiApiKey = binding.editTextAiApiKey.text.toString().trim()
-        val aiPromptTerm = binding.editTextAiPromptTerm.text.toString().trim()
-        val aiPromptSentence = binding.editTextAiPromptSentence.text.toString().trim()
-        val aiModel = binding.editTextAiModel.text.toString().trim()
-        val showAiButtonTerm = binding.checkboxShowAiButtonTerm.isChecked
-        val showAiButtonSentence = binding.checkboxShowAiButtonSentence.isChecked
+        val aiEndpoint = aiEndpointEditText.text.toString().trim()
+        val aiApiKey = aiApiKeyEditText.text.toString().trim()
+        val aiPromptTerm = aiPromptTermEditText.text.toString().trim()
+        val aiPromptSentence = aiPromptSentenceEditText.text.toString().trim()
+        val aiModel = aiModelEditText.text.toString().trim()
+        val showAiButtonTerm = showAiButtonTermCheckbox.isChecked
+        val showAiButtonSentence = showAiButtonSentenceCheckbox.isChecked
 
         // Validate AI endpoint URL if provided
         if (aiEndpoint.isNotEmpty() && !isValidUrl(aiEndpoint)) {
-            binding.textViewStatus.text = "Please enter a valid AI endpoint URL"
-            binding.textViewStatus.setTextColor(
+            statusTextView.text = "Please enter a valid AI endpoint URL"
+            statusTextView.setTextColor(
                 resources.getColor(android.R.color.holo_red_dark, null)
             )
             return
@@ -883,8 +1405,8 @@ class AppSettingsFragment : Fragment() {
         aiSettingsManager.showAiButtonSentence = showAiButtonSentence
 
         // Update status
-        binding.textViewStatus.text = "AI settings saved successfully!"
-        binding.textViewStatus.setTextColor(
+        statusTextView.text = "AI settings saved successfully!"
+        statusTextView.setTextColor(
             resources.getColor(android.R.color.holo_green_dark, null)
         )
 
@@ -975,13 +1497,13 @@ class AppSettingsFragment : Fragment() {
         val showAiButtonSentence = aiSettingsManager.showAiButtonSentence
 
         // Set values in UI elements
-        binding.editTextAiEndpoint.setText(aiEndpoint)
-        binding.editTextAiApiKey.setText(aiApiKey)
-        binding.editTextAiPromptTerm.setText(aiPromptTerm)
-        binding.editTextAiPromptSentence.setText(aiPromptSentence)
-        binding.editTextAiModel.setText(aiModel)
-        binding.checkboxShowAiButtonTerm.isChecked = showAiButtonTerm
-        binding.checkboxShowAiButtonSentence.isChecked = showAiButtonSentence
+        aiEndpointEditText.setText(aiEndpoint)
+        aiApiKeyEditText.setText(aiApiKey)
+        aiPromptTermEditText.setText(aiPromptTerm)
+        aiPromptSentenceEditText.setText(aiPromptSentence)
+        aiModelEditText.setText(aiModel)
+        showAiButtonTermCheckbox.isChecked = showAiButtonTerm
+        showAiButtonSentenceCheckbox.isChecked = showAiButtonSentence
     }
 
     private fun isValidUrl(url: String): Boolean {
@@ -998,32 +1520,32 @@ class AppSettingsFragment : Fragment() {
         val ttsEngineOptions = arrayOf("Android TTS", "Kokoro TTS")
         ttsEngineAdapter = ArrayAdapter(requireContext(), R.layout.spinner_item, ttsEngineOptions)
         ttsEngineAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-        binding.spinnerTtsEngine.adapter = ttsEngineAdapter
+        ttsEngineSpinner.adapter = ttsEngineAdapter
 
         // Load previously selected TTS engine setting
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         val selectedTtsEngine = sharedPref.getString("tts_engine", "Android TTS")
         val position = ttsEngineOptions.indexOf(selectedTtsEngine)
         if (position >= 0) {
-            binding.spinnerTtsEngine.setSelection(position)
+            ttsEngineSpinner.setSelection(position)
         } else {
             // Default to "Android TTS"
-            binding.spinnerTtsEngine.setSelection(0)
+            ttsEngineSpinner.setSelection(0)
         }
 
         // Set up visibility for Kokoro URL when engine selection changes
-        binding.spinnerTtsEngine.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+        ttsEngineSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val selectedEngine = ttsEngineOptions[position]
                 if (selectedEngine == "Kokoro TTS") {
-                    binding.textViewKokoroUrlLabel.visibility = View.VISIBLE
-                    binding.editTextKokoroUrl.visibility = View.VISIBLE
+                    kokoroUrlLabel.visibility = View.VISIBLE
+                    kokoroUrlEditText.visibility = View.VISIBLE
                     // Load saved Kokoro URL
                     val kokoroUrl = sharedPref.getString(KOKORO_SERVER_URL, "http://192.168.1.100:8880")
-                    binding.editTextKokoroUrl.setText(kokoroUrl)
+                    kokoroUrlEditText.setText(kokoroUrl)
                 } else {
-                    binding.textViewKokoroUrlLabel.visibility = View.GONE
-                    binding.editTextKokoroUrl.visibility = View.GONE
+                    kokoroUrlLabel.visibility = View.GONE
+                    kokoroUrlEditText.visibility = View.GONE
                 }
 
                 // Load settings specific to the selected engine
@@ -1031,8 +1553,8 @@ class AppSettingsFragment : Fragment() {
             }
 
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
-                binding.textViewKokoroUrlLabel.visibility = View.GONE
-                binding.editTextKokoroUrl.visibility = View.GONE
+                kokoroUrlLabel.visibility = View.GONE
+                kokoroUrlEditText.visibility = View.GONE
             }
         }
 
@@ -1079,35 +1601,35 @@ class AppSettingsFragment : Fragment() {
         ttsLanguageAdapter =
             ArrayAdapter(requireContext(), R.layout.spinner_item, ttsLanguageOptions)
         ttsLanguageAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-        binding.spinnerTtsLanguage.adapter = ttsLanguageAdapter
+        ttsLanguageSpinner.adapter = ttsLanguageAdapter
 
         // Load previously selected TTS language setting
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         val selectedTtsLanguage = sharedPref.getString("tts_language", "Auto (Detect from Book)")
         val position = ttsLanguageOptions.indexOf(selectedTtsLanguage)
         if (position >= 0) {
-            binding.spinnerTtsLanguage.setSelection(position)
+            ttsLanguageSpinner.setSelection(position)
         } else {
             // Default to "Auto (Detect from Book)"
-            binding.spinnerTtsLanguage.setSelection(0)
+            ttsLanguageSpinner.setSelection(0)
         }
     }
 
     private fun saveTtsSettings() {
         // Save the selected TTS engine and language
-        val selectedTtsEngine = binding.spinnerTtsEngine.selectedItem.toString()
-        val selectedTtsLanguage = binding.spinnerTtsLanguage.selectedItem.toString()
+        val selectedTtsEngine = ttsEngineSpinner.selectedItem.toString()
+        val selectedTtsLanguage = ttsLanguageSpinner.selectedItem.toString()
 
         // Get the TTS rate from the seekbar
-        val rateProgress = binding.seekBarTtsRate.progress
+        val rateProgress = speechRateSeekBar.progress
         val ttsRate = (rateProgress / 100f) + 0.5f // Convert 0-150 range to 0.5-2.0 range
 
         // Get the TTS pitch from the seekbar
-        val pitchProgress = binding.seekBarTtsPitch.progress
+        val pitchProgress = speechPitchSeekBar.progress
         val ttsPitch = (pitchProgress / 100f) + 0.8f // Convert 0-40 range to 0.8-1.2 range
 
         // Get the selected TTS voice from the text field
-        val selectedTtsVoice = binding.editTextTtsVoice.text.toString().trim()
+        val selectedTtsVoice = voiceEditText.text.toString().trim()
 
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
 
@@ -1123,7 +1645,7 @@ class AppSettingsFragment : Fragment() {
                         putFloat(TTS_PITCH_KOKORO, ttsPitch)
                         putString(TTS_VOICE_KOKORO, selectedTtsVoice)
 
-                        val kokoroUrl = binding.editTextKokoroUrl.text.toString().trim()
+                        val kokoroUrl = kokoroUrlEditText.text.toString().trim()
                         if (kokoroUrl.isNotEmpty()) {
                             putString(KOKORO_SERVER_URL, kokoroUrl)
                         } else {
@@ -1138,8 +1660,8 @@ class AppSettingsFragment : Fragment() {
                     applyTtsSettingsToManager(ttsRate, ttsPitch, selectedTtsVoice)
 
                     // Update the status
-                    binding.textViewStatus.text = "TTS settings saved successfully!"
-                    binding.textViewStatus.setTextColor(
+                    statusTextView.text = "TTS settings saved successfully!"
+                    statusTextView.setTextColor(
                         resources.getColor(android.R.color.holo_green_dark, null)
                     )
 
@@ -1147,8 +1669,8 @@ class AppSettingsFragment : Fragment() {
                     Toast.makeText(context, "TTS settings saved successfully", Toast.LENGTH_SHORT).show()
                 } else {
                     // Show error message
-                    binding.textViewStatus.text = "Error: Kokoro server is not reachable. Please check the URL."
-                    binding.textViewStatus.setTextColor(
+                    statusTextView.text = "Error: Kokoro server is not reachable. Please check the URL."
+                    statusTextView.setTextColor(
                         resources.getColor(android.R.color.holo_red_dark, null)
                     )
                     Toast.makeText(context, "Kokoro server is not reachable. Please check the URL.", Toast.LENGTH_LONG)
@@ -1171,8 +1693,8 @@ class AppSettingsFragment : Fragment() {
             applyTtsSettingsToManager(ttsRate, ttsPitch, selectedTtsVoice)
 
             // Update the status
-            binding.textViewStatus.text = "TTS settings saved successfully!"
-            binding.textViewStatus.setTextColor(
+            statusTextView.text = "TTS settings saved successfully!"
+            statusTextView.setTextColor(
                 resources.getColor(android.R.color.holo_green_dark, null)
             )
 
@@ -1182,7 +1704,7 @@ class AppSettingsFragment : Fragment() {
     }
 
     private fun validateKokoroServerUrl(callback: (Boolean) -> Unit) {
-        val serverUrl = binding.editTextKokoroUrl.text.toString().trim()
+        val serverUrl = kokoroUrlEditText.text.toString().trim()
 
         if (serverUrl.isEmpty()) {
             callback(false)
@@ -1241,7 +1763,7 @@ class AppSettingsFragment : Fragment() {
         // Load the CSS injection setting from SharedPreferences
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         val isCssInjectionDisabled = sharedPref.getBoolean("disable_css_injection", false)
-        binding.checkboxDisableCssInjection.isChecked = isCssInjectionDisabled
+        cssInjectionCheckbox.isChecked = isCssInjectionDisabled
     }
 
     private fun loadTtsSettings() {
@@ -1251,28 +1773,28 @@ class AppSettingsFragment : Fragment() {
         val ttsEngineOptions = arrayOf("Android TTS", "Kokoro TTS")
         val position = ttsEngineOptions.indexOf(selectedTtsEngine)
         if (position >= 0) {
-            binding.spinnerTtsEngine.setSelection(position)
+            ttsEngineSpinner.setSelection(position)
 
             // Show/hide Kokoro URL field based on selected engine
             if (selectedTtsEngine == "Kokoro TTS") {
-                binding.textViewKokoroUrlLabel.visibility = View.VISIBLE
-                binding.editTextKokoroUrl.visibility = View.VISIBLE
+                kokoroUrlLabel.visibility = View.VISIBLE
+                kokoroUrlEditText.visibility = View.VISIBLE
                 // Load saved Kokoro URL
                 val kokoroUrl =
                     sharedPref.getString(KOKORO_SERVER_URL, "http://192.168.1.100:8880") ?: "http://192.168.1.100:8880"
-                binding.editTextKokoroUrl.setText(kokoroUrl)
+                kokoroUrlEditText.setText(kokoroUrl)
             } else {
-                binding.textViewKokoroUrlLabel.visibility = View.GONE
-                binding.editTextKokoroUrl.visibility = View.GONE
+                kokoroUrlLabel.visibility = View.GONE
+                kokoroUrlEditText.visibility = View.GONE
             }
 
             // Load settings specific to the selected engine
             loadTtsSettingsForEngine(selectedTtsEngine)
         } else {
             // Default to "Android TTS"
-            binding.spinnerTtsEngine.setSelection(0)
-            binding.textViewKokoroUrlLabel.visibility = View.GONE
-            binding.editTextKokoroUrl.visibility = View.GONE
+            ttsEngineSpinner.setSelection(0)
+            kokoroUrlLabel.visibility = View.GONE
+            kokoroUrlEditText.visibility = View.GONE
 
             // Load default Android TTS settings
             loadTtsSettingsForEngine("Android TTS")
@@ -1327,44 +1849,44 @@ class AppSettingsFragment : Fragment() {
             )
         val languagePosition = ttsLanguageOptions.indexOf(selectedTtsLanguage)
         if (languagePosition >= 0) {
-            binding.spinnerTtsLanguage.setSelection(languagePosition)
+            ttsLanguageSpinner.setSelection(languagePosition)
         } else {
             // Default to "Auto (Detect from Book)"
-            binding.spinnerTtsLanguage.setSelection(0)
+            ttsLanguageSpinner.setSelection(0)
         }
 
         // Load TTS rate from SharedPreferences
         val ttsRate = sharedPref.getFloat(rateKey, 1.0f)
         val rateProgress = ((ttsRate - 0.5f) * 100).toInt() // Convert 0.5-2.0 range to 0-150 range
-        binding.seekBarTtsRate.progress = rateProgress.coerceIn(0, 150)
-        binding.textViewTtsRateValue.text = "Current rate: ${String.format("%.1f", ttsRate)}x"
+        speechRateSeekBar.progress = rateProgress.coerceIn(0, 150)
+        speechRateValueTextView.text = "Current rate: ${String.format("%.1f", ttsRate)}x"
 
         // Load TTS pitch from SharedPreferences
         val ttsPitch = sharedPref.getFloat(pitchKey, 1.0f)
         val pitchProgress = ((ttsPitch - 0.8f) * 100).toInt() // Convert 0.8-1.2 range to 0-40 range
-        binding.seekBarTtsPitch.progress = pitchProgress.coerceIn(0, 40)
-        binding.textViewTtsPitchValue.text = "Current pitch: ${String.format("%.1f", ttsPitch)}x"
+        speechPitchSeekBar.progress = pitchProgress.coerceIn(0, 40)
+        speechPitchValueTextView.text = "Current pitch: ${String.format("%.1f", ttsPitch)}x"
 
         // Load TTS voice from SharedPreferences into the text field
         val selectedTtsVoice = sharedPref.getString(voiceKey, "")
-        binding.editTextTtsVoice.setText(selectedTtsVoice)
+        voiceEditText.setText(selectedTtsVoice)
     }
 
     private fun setupTtsRateSeekBar() {
         // Initialize the seekbar progress based on saved values for the currently selected engine
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        val selectedTtsEngine = binding.spinnerTtsEngine.selectedItem?.toString() ?: "Android TTS"
+        val selectedTtsEngine = ttsEngineSpinner.selectedItem?.toString() ?: "Android TTS"
 
         // Determine which key to use based on the selected engine
         val rateKey = if (selectedTtsEngine == "Kokoro TTS") TTS_RATE_KOKORO else TTS_RATE_ANDROID
         val savedRate = sharedPref.getFloat(rateKey, 1.0f)
         val rateProgress =
             ((savedRate - 0.5f) * 100).toInt() // Convert 0.5-2.0 range to 0-150 range
-        binding.seekBarTtsRate.progress = rateProgress.coerceIn(0, 150)
-        binding.textViewTtsRateValue.text = "Current rate: ${String.format("%.1f", savedRate)}x"
+        speechRateSeekBar.progress = rateProgress.coerceIn(0, 150)
+        speechRateValueTextView.text = "Current rate: ${String.format("%.1f", savedRate)}x"
 
         // Set up the rate seekbar listener
-        binding.seekBarTtsRate.setOnSeekBarChangeListener(
+        speechRateSeekBar.setOnSeekBarChangeListener(
             object : android.widget.SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(
                     seekBar: android.widget.SeekBar?,
@@ -1373,7 +1895,7 @@ class AppSettingsFragment : Fragment() {
                 ) {
                     // Convert progress (0-150) to rate (0.5-2.0)
                     val rate = (progress / 100f) + 0.5f
-                    binding.textViewTtsRateValue.text =
+                    speechRateValueTextView.text =
                         "Current rate: ${String.format("%.1f", rate)}x"
                 }
 
@@ -1387,18 +1909,18 @@ class AppSettingsFragment : Fragment() {
     private fun setupTtsPitchSeekBar() {
         // Initialize the seekbar progress based on saved values for the currently selected engine
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        val selectedTtsEngine = binding.spinnerTtsEngine.selectedItem?.toString() ?: "Android TTS"
+        val selectedTtsEngine = ttsEngineSpinner.selectedItem?.toString() ?: "Android TTS"
 
         // Determine which key to use based on the selected engine
         val pitchKey = if (selectedTtsEngine == "Kokoro TTS") TTS_PITCH_KOKORO else TTS_PITCH_ANDROID
         val savedPitch = sharedPref.getFloat(pitchKey, 1.0f)
         val pitchProgress =
             ((savedPitch - 0.8f) * 100).toInt() // Convert 0.8-1.2 range to 0-40 range
-        binding.seekBarTtsPitch.progress = pitchProgress.coerceIn(0, 40)
-        binding.textViewTtsPitchValue.text = "Current pitch: ${String.format("%.1f", savedPitch)}x"
+        speechPitchSeekBar.progress = pitchProgress.coerceIn(0, 40)
+        speechPitchValueTextView.text = "Current pitch: ${String.format("%.1f", savedPitch)}x"
 
         // Set up the pitch seekbar listener
-        binding.seekBarTtsPitch.setOnSeekBarChangeListener(
+        speechPitchSeekBar.setOnSeekBarChangeListener(
             object : android.widget.SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(
                     seekBar: android.widget.SeekBar?,
@@ -1407,7 +1929,7 @@ class AppSettingsFragment : Fragment() {
                 ) {
                     // Convert progress (0-40) to pitch (0.8-1.2)
                     val pitch = (progress / 100f) + 0.8f
-                    binding.textViewTtsPitchValue.text =
+                    speechPitchValueTextView.text =
                         "Current pitch: ${String.format("%.1f", pitch)}x"
                 }
 
@@ -1420,18 +1942,18 @@ class AppSettingsFragment : Fragment() {
 
     private fun setupTtsVoiceSelection() {
         // Set up the button to show available voices
-        binding.buttonShowVoices.setOnClickListener {
+        showVoicesButton.setOnClickListener {
             showAvailableVoicesDialog()
         }
 
         // Load previously selected TTS voice for the currently selected engine
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        val selectedTtsEngine = binding.spinnerTtsEngine.selectedItem?.toString() ?: "Android TTS"
+        val selectedTtsEngine = ttsEngineSpinner.selectedItem?.toString() ?: "Android TTS"
 
         // Determine which key to use based on the selected engine
         val voiceKey = if (selectedTtsEngine == "Kokoro TTS") TTS_VOICE_KOKORO else TTS_VOICE_ANDROID
         val selectedTtsVoice = sharedPref.getString(voiceKey, "")
-        binding.editTextTtsVoice.setText(selectedTtsVoice)
+        voiceEditText.setText(selectedTtsVoice)
     }
 
     private fun getAvailableTtsVoices(): List<String> {
@@ -1455,7 +1977,7 @@ class AppSettingsFragment : Fragment() {
 
     private fun showAvailableVoicesDialog() {
         // Get available voices based on the selected TTS engine
-        val selectedTtsEngine = binding.spinnerTtsEngine.selectedItem?.toString() ?: "Android TTS"
+        val selectedTtsEngine = ttsEngineSpinner.selectedItem?.toString() ?: "Android TTS"
         val voiceOptions = if (selectedTtsEngine == "Kokoro TTS") {
             // For Kokoro TTS, provide all available voice names with language and grade info
             listOf(
@@ -1503,10 +2025,6 @@ class AppSettingsFragment : Fragment() {
                 "zf_xiaoni (Chinese D)",
                 "zf_xiaoxiao (Chinese D)",
                 "zf_xiaoyi (Chinese D)",
-                "zm_yunjian (Chinese D)",
-                "zm_yunxi (Chinese D)",
-                "zm_yunxia (Chinese D)",
-                "zm_yunyang (Chinese D)",
 
                 // Spanish (F: 1, M: 2)
                 "ef_dora (Spanish)",
@@ -1552,7 +2070,7 @@ class AppSettingsFragment : Fragment() {
             } else {
                 selectedVoiceWithInfo
             }
-            binding.editTextTtsVoice.setText(selectedVoice)
+            voiceEditText.setText(selectedVoice)
         }
 
         builder.setNegativeButton("Cancel", null)
