@@ -314,7 +314,34 @@ class MainActivity :
                 drawerLayout
             )
         setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
+
+        // Set up custom navigation for books to respect user preference
+        navView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_books -> {
+                    // Check user's preference for default books view
+                    val sharedPref = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+                    val defaultBooks = sharedPref.getString("default_books", "Native Books")
+
+                    if (defaultBooks == "Native Books") {
+                        navController.navigate(R.id.nav_native_books)
+                    } else {
+                        navController.navigate(R.id.nav_books)
+                    }
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+
+                else -> {
+                    // Use default navigation for all other items
+                    if (navController.currentDestination?.id != menuItem.itemId) {
+                        navController.navigate(menuItem.itemId)
+                    }
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+            }
+        }
         updateVersionInfo(navView)
     }
 

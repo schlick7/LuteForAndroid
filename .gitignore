@@ -1,12 +1,7 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea
 .DS_Store
 /build
 /captures
@@ -17,9 +12,10 @@ local.properties
 .serena
 .settings
 /lute-v3
-/Research_and_Other_docs
+/Research
 QWEN.md
 stuff.md
 lastthread.md
 .directory
 .project
+.env

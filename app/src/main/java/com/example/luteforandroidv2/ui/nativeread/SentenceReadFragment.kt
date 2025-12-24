@@ -43,11 +43,11 @@ import kotlinx.coroutines.launch
 import org.jsoup.Jsoup
 
 class SentenceReadFragment :
-        Fragment(),
-        NativeTermFormFragment.DictionaryListener,
-        DictionaryDialogFragment.DictionaryListener,
-        NativeTextView.TermInteractionListener,
-        TermInteractionManager.TermInteractionListener {
+    Fragment(),
+    NativeTermFormFragment.DictionaryListener,
+    DictionaryDialogFragment.DictionaryListener,
+    NativeTextView.TermInteractionListener,
+    TermInteractionManager.TermInteractionListener {
     private var _binding: FragmentSentenceReadBinding? = null
     private val binding
         get() = _binding!!
@@ -134,9 +134,9 @@ class SentenceReadFragment :
     private var showStatusTerms = true
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         Log.d("SentenceReadFragment", "onCreateView called")
         // Use the dedicated fragment_sentence_reader layout instead of the shared
@@ -174,11 +174,19 @@ class SentenceReadFragment :
     private fun initializeTTS() {
         ttsManager = TTSManager.getInstance(requireContext())
         ttsManager?.setTTSListener(
-                object : TTSManager.TTSListener {
-                    override fun onTTSStateChanged(isPlaying: Boolean) {
-                        activity?.runOnUiThread { updateTtsButtonState(isPlaying) }
+            object : TTSManager.TTSListener {
+                override fun onTTSStateChanged(isPlaying: Boolean) {
+                    activity?.runOnUiThread { updateTtsButtonState(isPlaying) }
+                }
+
+                override fun onError(error: String) {
+                    Log.e("SentenceReadFragment", "TTS Error: $error")
+                    // Optionally show a toast or notification about the error
+                    activity?.runOnUiThread {
+                        Toast.makeText(context, "TTS Error: $error", Toast.LENGTH_LONG).show()
                     }
                 }
+            }
         )
 
         // Initialize TTS engine
@@ -201,7 +209,7 @@ class SentenceReadFragment :
                 // Limit the height of the status terms container to prevent overlay
                 val layoutParams = binding.statusTermsContainer.layoutParams
                 layoutParams.height =
-                        resources.getDimension(R.dimen.max_status_terms_height).toInt()
+                    resources.getDimension(R.dimen.max_status_terms_height).toInt()
                 binding.statusTermsContainer.layoutParams = layoutParams
 
                 // Setup AI button
@@ -232,7 +240,7 @@ class SentenceReadFragment :
             if (aiSettingsManager.shouldShowAiButtonInSentenceReader()) {
                 // Find the AI button in the status terms container
                 val aiButton =
-                        binding.statusTermsContainer.findViewById<ImageButton>(R.id.ai_button)
+                    binding.statusTermsContainer.findViewById<ImageButton>(R.id.ai_button)
 
                 // Show the AI button
                 aiButton?.visibility = View.VISIBLE
@@ -248,17 +256,17 @@ class SentenceReadFragment :
                     } else {
                         // Show a toast message if the sentence is empty
                         Toast.makeText(
-                                        requireContext(),
-                                        "No sentence text available for AI processing",
-                                        Toast.LENGTH_SHORT
-                                )
-                                .show()
+                            requireContext(),
+                            "No sentence text available for AI processing",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
                     }
                 }
             } else {
                 // Hide the AI button
                 val aiButton =
-                        binding.statusTermsContainer.findViewById<ImageButton>(R.id.ai_button)
+                    binding.statusTermsContainer.findViewById<ImageButton>(R.id.ai_button)
                 aiButton?.visibility = View.GONE
             }
         } catch (e: Exception) {
@@ -271,8 +279,8 @@ class SentenceReadFragment :
         try {
             // Get user preference for TTS button visibility from SharedPreferences
             val sharedPref =
-                    requireContext()
-                            .getSharedPreferences("sentence_reader_settings", Context.MODE_PRIVATE)
+                requireContext()
+                    .getSharedPreferences("sentence_reader_settings", Context.MODE_PRIVATE)
             val showTtsButton = sharedPref.getBoolean("show_tts_button", true) // Default to true
 
             // Find the TTS button in the status terms container
@@ -303,7 +311,7 @@ class SentenceReadFragment :
                             } else {
                                 // Use user's selected language
                                 val selectedLanguageCode =
-                                        mapLanguageDisplayNameToCode(ttsLanguagePreference)
+                                    mapLanguageDisplayNameToCode(ttsLanguagePreference)
                                 if (!selectedLanguageCode.isNullOrEmpty()) {
                                     ttsManager?.setLanguage(selectedLanguageCode)
                                 }
@@ -311,11 +319,11 @@ class SentenceReadFragment :
                             ttsManager?.speak(currentSentenceText)
                         } else {
                             Toast.makeText(
-                                            requireContext(),
-                                            "No sentence text to read aloud",
-                                            Toast.LENGTH_SHORT
-                                    )
-                                    .show()
+                                requireContext(),
+                                "No sentence text to read aloud",
+                                Toast.LENGTH_SHORT
+                            )
+                                .show()
                         }
                     }
                 }
@@ -378,18 +386,18 @@ class SentenceReadFragment :
                         // Only add the term if we haven't added it already (deduplication)
                         if (!addedTermIds.contains(segment.termId)) {
                             val termData =
-                                    TermData(
-                                            termId = segment.termId,
-                                            term = segment.text,
-                                            languageId = segment.languageId,
-                                            translation = segment.translation,
-                                            status = segment.status,
-                                            parentsList = segment.parentList,
-                                            parentTranslations = segment.parentTranslations,
-                                            tapX = -1f,
-                                            tapY = -1f,
-                                            segmentId = segment.id
-                                    )
+                                TermData(
+                                    termId = segment.termId,
+                                    term = segment.text,
+                                    languageId = segment.languageId,
+                                    translation = segment.translation,
+                                    status = segment.status,
+                                    parentsList = segment.parentList,
+                                    parentTranslations = segment.parentTranslations,
+                                    tapX = -1f,
+                                    tapY = -1f,
+                                    segmentId = segment.id
+                                )
                             termsByStatus[segment.status]?.add(termData)
                             addedTermIds.add(segment.termId)
                         }
@@ -444,43 +452,43 @@ class SentenceReadFragment :
 
                     // Launch coroutines for each term in the batch
                     val jobs =
-                            batch.map { term ->
-                                async {
-                                    try {
-                                        Log.d(
-                                                "SentenceReadFragment",
-                                                "Fetching wordpopup data for term ID: ${term.termId}"
-                                        )
-                                        val result = viewModel.getTermPopupData(term.termId)
-                                        if (result.isSuccess) {
-                                            val popupContent = result.getOrNull()
-                                            if (popupContent != null) {
-                                                // Parse the enhanced data and update the UI
-                                                updateTermWithEnhancedData(term, popupContent)
-                                            }
-                                        } else {
-                                            Log.e(
-                                                    "SentenceReadFragment",
-                                                    "Failed to fetch wordpopup data for term ID: ${term.termId}"
-                                            )
+                        batch.map { term ->
+                            async {
+                                try {
+                                    Log.d(
+                                        "SentenceReadFragment",
+                                        "Fetching wordpopup data for term ID: ${term.termId}"
+                                    )
+                                    val result = viewModel.getTermPopupData(term.termId)
+                                    if (result.isSuccess) {
+                                        val popupContent = result.getOrNull()
+                                        if (popupContent != null) {
+                                            // Parse the enhanced data and update the UI
+                                            updateTermWithEnhancedData(term, popupContent)
                                         }
-                                    } catch (e: Exception) {
+                                    } else {
                                         Log.e(
-                                                "SentenceReadFragment",
-                                                "Error fetching wordpopup data for term ID: ${term.termId}",
-                                                e
+                                            "SentenceReadFragment",
+                                            "Failed to fetch wordpopup data for term ID: ${term.termId}"
                                         )
                                     }
+                                } catch (e: Exception) {
+                                    Log.e(
+                                        "SentenceReadFragment",
+                                        "Error fetching wordpopup data for term ID: ${term.termId}",
+                                        e
+                                    )
                                 }
                             }
+                        }
 
                     // Wait for all jobs in this batch to complete
                     jobs.awaitAll()
                 }
 
                 Log.d(
-                        "SentenceReadFragment",
-                        "Completed fetching enhanced term data for ${allTerms.size} terms"
+                    "SentenceReadFragment",
+                    "Completed fetching enhanced term data for ${allTerms.size} terms"
                 )
             } catch (e: Exception) {
                 Log.e("SentenceReadFragment", "Error in fetchEnhancedTermData", e)
@@ -491,8 +499,8 @@ class SentenceReadFragment :
     /** Update term display with enhanced translation data */
     private fun updateTermWithEnhancedData(term: TermData, popupContent: String) {
         Log.d(
-                "SentenceReadFragment",
-                "Updating term ${term.termId} (${term.term}) with enhanced data"
+            "SentenceReadFragment",
+            "Updating term ${term.termId} (${term.term}) with enhanced data"
         )
         try {
             // Parse the HTML content to extract enhanced translation information
@@ -505,38 +513,38 @@ class SentenceReadFragment :
                 if (termLayout != null) {
                     // Get the translation text view we stored earlier
                     val translationTextView =
-                            termLayout.getTag(R.id.translation_text_view_tag) as? TextView
+                        termLayout.getTag(R.id.translation_text_view_tag) as? TextView
 
                     if (translationTextView != null) {
                         // Update the translation text with the enhanced data
                         translationTextView.text = enhancedTranslation
                         Log.d(
-                                "SentenceReadFragment",
-                                "Successfully updated translation for term ${term.termId}"
+                            "SentenceReadFragment",
+                            "Successfully updated translation for term ${term.termId}"
                         )
                     } else {
                         Log.d(
-                                "SentenceReadFragment",
-                                "Could not find translation text view for term ${term.termId}"
+                            "SentenceReadFragment",
+                            "Could not find translation text view for term ${term.termId}"
                         )
                     }
                 } else {
                     Log.d(
-                            "SentenceReadFragment",
-                            "Could not find term layout for term ${term.termId}"
+                        "SentenceReadFragment",
+                        "Could not find term layout for term ${term.termId}"
                     )
                 }
             } else {
                 Log.d(
-                        "SentenceReadFragment",
-                        "No enhanced translation data found for term ${term.termId}"
+                    "SentenceReadFragment",
+                    "No enhanced translation data found for term ${term.termId}"
                 )
             }
         } catch (e: Exception) {
             Log.e(
-                    "SentenceReadFragment",
-                    "Error updating term ${term.termId} with enhanced data",
-                    e
+                "SentenceReadFragment",
+                "Error updating term ${term.termId} with enhanced data",
+                e
             )
         }
     }
@@ -684,51 +692,51 @@ class SentenceReadFragment :
 
         // Create a linear layout for the term and translation
         val termLayout =
-                LinearLayout(context).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    setPadding(0, 4, 0, 4) // Reduced vertical padding
-                    // Store term ID as tag for later reference
-                    tag = "term_${termData.termId}"
-                }
+            LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(0, 4, 0, 4) // Reduced vertical padding
+                // Store term ID as tag for later reference
+                tag = "term_${termData.termId}"
+            }
 
         // Create term text view with status-specific background color
         val termTextView =
-                TextView(context).apply {
-                    text = termData.term
-                    // Convert progress to font size (e.g., 8-24sp)
-                    val fontSize =
-                            8f + ((textFormattingManager?.currentStatusTermsFontSize ?: 50) * 0.2f)
-                    textSize = fontSize
-                    setTextColor(ContextCompat.getColor(context, R.color.lute_on_background))
+            TextView(context).apply {
+                text = termData.term
+                // Convert progress to font size (e.g., 8-24sp)
+                val fontSize =
+                    8f + ((textFormattingManager?.currentStatusTermsFontSize ?: 50) * 0.2f)
+                textSize = fontSize
+                setTextColor(ContextCompat.getColor(context, R.color.lute_on_background))
 
-                    // Apply status-specific background color with rounded corners
-                    val backgroundColor = getStatusColor(termData.status)
-                    if (backgroundColor != android.graphics.Color.TRANSPARENT) {
-                        // Create a drawable with rounded corners matching sentence terms
-                        val drawable = android.graphics.drawable.GradientDrawable()
-                        drawable.setColor(backgroundColor)
-                        drawable.cornerRadius = 6f // Match corner radius from WordBackgroundSpan
-                        background = drawable
-                    } else {
-                        // For transparent backgrounds, use a subtle background to maintain
-                        // visibility
-                        setBackgroundResource(R.drawable.term_status_background)
-                    }
-
-                    setPadding(8, 4, 8, 4) // Reduced padding to match sentence terms more closely
+                // Apply status-specific background color with rounded corners
+                val backgroundColor = getStatusColor(termData.status)
+                if (backgroundColor != android.graphics.Color.TRANSPARENT) {
+                    // Create a drawable with rounded corners matching sentence terms
+                    val drawable = android.graphics.drawable.GradientDrawable()
+                    drawable.setColor(backgroundColor)
+                    drawable.cornerRadius = 6f // Match corner radius from WordBackgroundSpan
+                    background = drawable
+                } else {
+                    // For transparent backgrounds, use a subtle background to maintain
+                    // visibility
+                    setBackgroundResource(R.drawable.term_status_background)
                 }
+
+                setPadding(8, 4, 8, 4) // Reduced padding to match sentence terms more closely
+            }
 
         // Create translation text view and store reference for later updates
         val translationTextView =
-                TextView(context).apply {
-                    text = termData.translation.ifEmpty { "[No translation]" }
-                    // Convert progress to font size (e.g., 8-24sp)
-                    val fontSize =
-                            8f + ((textFormattingManager?.currentStatusTermsFontSize ?: 50) * 0.2f)
-                    textSize = fontSize
-                    setTextColor(ContextCompat.getColor(context, R.color.lute_on_background))
-                    setPadding(8, 4, 8, 4) // Reduced padding
-                }
+            TextView(context).apply {
+                text = termData.translation.ifEmpty { "[No translation]" }
+                // Convert progress to font size (e.g., 8-24sp)
+                val fontSize =
+                    8f + ((textFormattingManager?.currentStatusTermsFontSize ?: 50) * 0.2f)
+                textSize = fontSize
+                setTextColor(ContextCompat.getColor(context, R.color.lute_on_background))
+                setPadding(8, 4, 8, 4) // Reduced padding
+            }
 
         // Store translation text view as a tag so we can update it later
         termLayout.setTag(R.id.translation_text_view_tag, translationTextView)
@@ -747,18 +755,18 @@ class SentenceReadFragment :
             1 -> android.graphics.Color.parseColor("#b46b7a") // light red - Learning (status 1)
             2 -> android.graphics.Color.parseColor("#BA8050") // light orange - Learning (status 2)
             3 ->
-                    android.graphics.Color.parseColor(
-                            "#BD9C7B"
-                    ) // light yellow/tan - Learning (status 3)
+                android.graphics.Color.parseColor(
+                    "#BD9C7B"
+                ) // light yellow/tan - Learning (status 3)
             4 -> android.graphics.Color.parseColor("#756D6B") // light grey - Learning (status 4)
             5 ->
-                    android.graphics.Color.parseColor(
-                            "#40756D6B"
-                    ) // 25% transparent light grey - Known (status 5)
+                android.graphics.Color.parseColor(
+                    "#40756D6B"
+                ) // 25% transparent light grey - Known (status 5)
             98 -> android.graphics.Color.TRANSPARENT // No background for ignored terms (status 98)
             99 ->
-                    android.graphics.Color
-                            .TRANSPARENT // No background for well-known terms (status 99)
+                android.graphics.Color
+                    .TRANSPARENT // No background for well-known terms (status 99)
             else -> android.graphics.Color.TRANSPARENT // Default - no background
         }
     }
@@ -782,14 +790,14 @@ class SentenceReadFragment :
     /** Initialize menu preferences from SharedPreferences */
     private fun initializePreferences() {
         readerSettingsPrefs =
-                requireContext().getSharedPreferences("reader_settings", Context.MODE_PRIVATE)
+            requireContext().getSharedPreferences("reader_settings", Context.MODE_PRIVATE)
         textFormattingPrefs =
-                requireContext().getSharedPreferences("text_formatting", Context.MODE_PRIVATE)
+            requireContext().getSharedPreferences("text_formatting", Context.MODE_PRIVATE)
 
         // Set up preference change listener for text formatting
         val sharedPref =
-                requireActivity()
-                        .getSharedPreferences("reader_menu_preferences", Context.MODE_PRIVATE)
+            requireActivity()
+                .getSharedPreferences("reader_menu_preferences", Context.MODE_PRIVATE)
         val editor = sharedPref.edit()
 
         // Restore reader menu settings
@@ -807,8 +815,8 @@ class SentenceReadFragment :
     /** Save menu preferences to SharedPreferences */
     private fun saveMenuPreferences() {
         val sharedPref =
-                requireContext()
-                        .getSharedPreferences("reader_menu_preferences", Context.MODE_PRIVATE)
+            requireContext()
+                .getSharedPreferences("reader_menu_preferences", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putBoolean("show_audio_player", showAudioPlayer)
             putBoolean("show_status_terms", showStatusTerms)
@@ -835,14 +843,14 @@ class SentenceReadFragment :
 
         // Initialize navigation manager
         navigationManager =
-                NavigationManager(
-                        this,
-                        viewModel,
-                        bookStateManager,
-                        navigationController,
-                        savedBookId,
-                        savedBookLanguage
-                )
+            NavigationManager(
+                this,
+                viewModel,
+                bookStateManager,
+                navigationController,
+                savedBookId,
+                savedBookLanguage
+            )
         Log.d("SentenceReadFragment", "Navigation manager initialized")
 
         // Set up term interaction manager listener
@@ -899,7 +907,7 @@ class SentenceReadFragment :
 
     private fun loadLastBookId() {
         val sharedPref =
-                requireContext().getSharedPreferences("reader_settings", Context.MODE_PRIVATE)
+            requireContext().getSharedPreferences("reader_settings", Context.MODE_PRIVATE)
         savedBookId = sharedPref.getString("last_book_id", null)
         savedBookLanguage = sharedPref.getString("last_book_language", null)
         Log.d("SentenceReadFragment", "Loaded savedBookId: '$savedBookId'")
@@ -915,9 +923,9 @@ class SentenceReadFragment :
                 }
             } catch (e: Exception) {
                 Log.e(
-                        "SentenceReadFragment",
-                        "Error parsing saved language ID, resetting to default",
-                        e
+                    "SentenceReadFragment",
+                    "Error parsing saved language ID, resetting to default",
+                    e
                 )
                 savedBookLanguage = "1"
             }
@@ -926,10 +934,10 @@ class SentenceReadFragment :
 
     private fun saveLastBookId(bookId: String) {
         val sharedPref =
-                requireContext().getSharedPreferences("reader_settings", Context.MODE_PRIVATE)
+            requireContext().getSharedPreferences("reader_settings", Context.MODE_PRIVATE)
         Log.d(
-                "SentenceReadFragment",
-                "Saving book ID: '$bookId' and language: '$savedBookLanguage'"
+            "SentenceReadFragment",
+            "Saving book ID: '$bookId' and language: '$savedBookLanguage'"
         )
         with(sharedPref.edit()) {
             putString("last_book_id", bookId)
@@ -972,26 +980,26 @@ class SentenceReadFragment :
     private fun applySavedTextFormatting() {
         Log.d("SentenceReadFragment", "applySavedTextFormatting called")
         Log.d(
-                "SentenceReadFragment",
-                "Container class: ${binding.textContentContainer.javaClass.simpleName}"
+            "SentenceReadFragment",
+            "Container class: ${binding.textContentContainer.javaClass.simpleName}"
         )
 
         // Apply saved font
         textFormattingManager?.applySelectedFont(
-                textFormattingManager?.currentFontName ?: "Default",
-                binding.textContentContainer
+            textFormattingManager?.currentFontName ?: "Default",
+            binding.textContentContainer
         )
 
         // Apply saved font size
         textFormattingManager?.updateFontSize(
-                textFormattingManager?.currentFontSize ?: 35,
-                binding.textContentContainer
+            textFormattingManager?.currentFontSize ?: 35,
+            binding.textContentContainer
         )
 
         // Apply saved line spacing
         textFormattingManager?.updateLineSpacing(
-                textFormattingManager?.currentLineSpacing ?: 45,
-                binding.textContentContainer
+            textFormattingManager?.currentLineSpacing ?: 45,
+            binding.textContentContainer
         )
 
         // Refresh status terms to apply any font size changes
@@ -1011,9 +1019,9 @@ class SentenceReadFragment :
     private fun setupToolbar() {
         toolbarFragment = ToolbarFragment()
         childFragmentManager
-                .beginTransaction()
-                .replace(R.id.toolbar_container, toolbarFragment!!)
-                .commit()
+            .beginTransaction()
+            .replace(R.id.toolbar_container, toolbarFragment!!)
+            .commit()
         Log.d("SentenceReadFragment", "Toolbar fragment added")
 
         // Create the audio player manager with the repository
@@ -1024,9 +1032,9 @@ class SentenceReadFragment :
         audioPlayerFragment?.setAudioPlayerManager(audioPlayerManager!!)
 
         childFragmentManager
-                .beginTransaction()
-                .replace(R.id.audio_player_container, audioPlayerFragment!!)
-                .commit()
+            .beginTransaction()
+            .replace(R.id.audio_player_container, audioPlayerFragment!!)
+            .commit()
 
         // Hide the audio player container for now
         binding.audioPlayerContainer.visibility = View.GONE
@@ -1036,51 +1044,51 @@ class SentenceReadFragment :
     private fun setupPageIndicator() {
         pageIndicatorFragment = PageIndicatorFragment()
         pageIndicatorFragment?.setPageNavigationListener(
-                object : PageIndicatorFragment.PageNavigationListener {
-                    override fun onAllKnown() {
-                        // Implementation for handling 'all known' button click
-                        // Add your logic here
-                    }
+            object : PageIndicatorFragment.PageNavigationListener {
+                override fun onAllKnown() {
+                    // Implementation for handling 'all known' button click
+                    // Add your logic here
+                }
 
-                    override fun onPreviousPage() {
-                        navigateToPreviousPage()
-                    }
+                override fun onPreviousPage() {
+                    navigateToPreviousPage()
+                }
 
-                    override fun onLuteMenu() {
-                        Log.d("SentenceReadFragment", "onLuteMenu called")
-                        try {
-                            if (isReaderOptionsMenuVisible()) {
-                                Log.d("SentenceReadFragment", "Menu is visible, hiding it")
-                                hideReaderOptionsMenu()
-                            } else {
-                                Log.d("SentenceReadFragment", "Menu is not visible, showing it")
-                                showReaderOptionsMenu()
-                            }
-                        } catch (e: Exception) {
-                            Log.e("SentenceReadFragment", "Error in onLuteMenu", e)
+                override fun onLuteMenu() {
+                    Log.d("SentenceReadFragment", "onLuteMenu called")
+                    try {
+                        if (isReaderOptionsMenuVisible()) {
+                            Log.d("SentenceReadFragment", "Menu is visible, hiding it")
+                            hideReaderOptionsMenu()
+                        } else {
+                            Log.d("SentenceReadFragment", "Menu is not visible, showing it")
+                            showReaderOptionsMenu()
                         }
-                    }
-
-                    override fun onNextPage() {
-                        navigationManager?.navigateToNextPageWithoutMarkingDone()
-                    }
-
-                    override fun onMarkPageDone() {
-                        navigationManager?.markPageAsDoneAndNavigateToNext()
+                    } catch (e: Exception) {
+                        Log.e("SentenceReadFragment", "Error in onLuteMenu", e)
                     }
                 }
+
+                override fun onNextPage() {
+                    navigationManager?.navigateToNextPageWithoutMarkingDone()
+                }
+
+                override fun onMarkPageDone() {
+                    navigationManager?.markPageAsDoneAndNavigateToNext()
+                }
+            }
         )
         childFragmentManager
-                .beginTransaction()
-                .replace(R.id.page_indicator_container, pageIndicatorFragment!!)
-                .commit()
+            .beginTransaction()
+            .replace(R.id.page_indicator_container, pageIndicatorFragment!!)
+            .commit()
         Log.d("SentenceReadFragment", "Page indicator fragment added")
 
         // Hide the all known button in the page indicator for the sentence reader
         // This needs to be posted to ensure the fragment is fully created
         binding.root.post {
             pageIndicatorFragment?.view?.findViewById<View>(R.id.all_known_button)?.visibility =
-                    View.GONE
+                View.GONE
         }
     }
 
@@ -1101,26 +1109,26 @@ class SentenceReadFragment :
             // Log first few paragraphs for debugging
             content.paragraphs.take(3).forEachIndexed { index, paragraph ->
                 Log.d(
-                        "SentenceReadFragment",
-                        "Paragraph $index: ${paragraph.id} with ${paragraph.segments.size} segments"
+                    "SentenceReadFragment",
+                    "Paragraph $index: ${paragraph.id} with ${paragraph.segments.size} segments"
                 )
                 paragraph.segments.take(3).forEachIndexed { segIndex, segment ->
                     Log.d(
-                            "SentenceReadFragment",
-                            "  Segment $segIndex: '${segment.text}' (status: ${segment.status}, interactive: ${segment.isInteractive})"
+                        "SentenceReadFragment",
+                        "  Segment $segIndex: '${segment.text}' (status: ${segment.status}, interactive: ${segment.isInteractive})"
                     )
                 }
                 if (paragraph.segments.size > 3) {
                     Log.d(
-                            "SentenceReadFragment",
-                            "  ... and ${paragraph.segments.size - 3} more segments"
+                        "SentenceReadFragment",
+                        "  ... and ${paragraph.segments.size - 3} more segments"
                     )
                 }
             }
             if (content.paragraphs.size > 3) {
                 Log.d(
-                        "SentenceReadFragment",
-                        "... and ${content.paragraphs.size - 3} more paragraphs"
+                    "SentenceReadFragment",
+                    "... and ${content.paragraphs.size - 3} more paragraphs"
                 )
             }
 
@@ -1137,8 +1145,8 @@ class SentenceReadFragment :
 
             // Render only the first sentence group
             Log.d(
-                    "SentenceReadFragment",
-                    "Rendering first sentence group with language ID: ${content.pageMetadata.languageId}"
+                "SentenceReadFragment",
+                "Rendering first sentence group with language ID: ${content.pageMetadata.languageId}"
             )
             renderCurrentSentence(content)
 
@@ -1146,8 +1154,8 @@ class SentenceReadFragment :
             binding.contentScrollView.post {
                 val initialScrollY = binding.contentScrollView.scrollY
                 Log.d(
-                        "SentenceReadFragment",
-                        "Initial scroll position after render: $initialScrollY"
+                    "SentenceReadFragment",
+                    "Initial scroll position after render: $initialScrollY"
                 )
 
                 // Now that content is rendered, block auto-scrolling to prevent unwanted scrolling
@@ -1158,8 +1166,8 @@ class SentenceReadFragment :
                     ->
                     if (Math.abs(scrollY - oldScrollY) > 5) { // Only log significant changes
                         Log.d(
-                                "SentenceReadFragment",
-                                "Scroll position changed from $oldScrollY to $scrollY"
+                            "SentenceReadFragment",
+                            "Scroll position changed from $oldScrollY to $scrollY"
                         )
                     }
                 }
@@ -1172,8 +1180,8 @@ class SentenceReadFragment :
 
             // Update navigation controller with page info
             Log.d(
-                    "SentenceReadFragment",
-                    "Setting total page count to ${content.pageMetadata.pageCount}"
+                "SentenceReadFragment",
+                "Setting total page count to ${content.pageMetadata.pageCount}"
             )
             navigationController.setTotalPageCount(content.pageMetadata.pageCount)
             Log.d("SentenceReadFragment", "Setting current page to ${content.pageMetadata.pageNum}")
@@ -1185,8 +1193,8 @@ class SentenceReadFragment :
                 if (!content.pageMetadata.languageName.isNullOrEmpty()) {
                     savedBookLanguage = content.pageMetadata.languageName
                     Log.d(
-                            "SentenceReadFragment",
-                            "Saved book language name from metadata: ${content.pageMetadata.languageName}"
+                        "SentenceReadFragment",
+                        "Saved book language name from metadata: ${content.pageMetadata.languageName}"
                     )
                 } else {
                     // If language name is not in metadata, try to get it from the book ID
@@ -1198,13 +1206,13 @@ class SentenceReadFragment :
                                 activity?.runOnUiThread {
                                     savedBookLanguage = languageName
                                     Log.d(
-                                            "SentenceReadFragment",
-                                            "Fetched and saved book language name: $languageName"
+                                        "SentenceReadFragment",
+                                        "Fetched and saved book language name: $languageName"
                                     )
                                     // Update NavigationManager with the proper language name
                                     navigationManager?.updateBookInfo(
-                                            savedBookId,
-                                            savedBookLanguage
+                                        savedBookId,
+                                        savedBookLanguage
                                     )
                                     // Save to SharedPreferences
                                     saveLastBookId(savedBookId ?: "")
@@ -1212,44 +1220,43 @@ class SentenceReadFragment :
                             }
                         }
                     }
-                            ?: run {
-                                // If we can't get book ID, but we have a valid language ID,
-                                // try to get the language name from MainActivity
-                                if (content.pageMetadata.languageId > 0) {
-                                    val mainActivity = activity as? MainActivity
-                                    mainActivity?.fetchBookLanguage(content.pageMetadata.bookId) {
-                                            languageName ->
-                                        if (!languageName.isNullOrEmpty()) {
-                                            activity?.runOnUiThread {
-                                                savedBookLanguage = languageName
-                                                Log.d(
-                                                        "SentenceReadFragment",
-                                                        "Fetched language name for ID ${content.pageMetadata.languageId}: $languageName"
-                                                )
-                                                // Save to SharedPreferences
-                                                saveLastBookId(savedBookId ?: "")
-                                            }
-                                        } else {
-                                            // Fallback to using language ID as string if we can't
-                                            // get language name
-                                            savedBookLanguage =
-                                                    content.pageMetadata.languageId.toString()
+                        ?: run {
+                            // If we can't get book ID, but we have a valid language ID,
+                            // try to get the language name from MainActivity
+                            if (content.pageMetadata.languageId > 0) {
+                                val mainActivity = activity as? MainActivity
+                                mainActivity?.fetchBookLanguage(content.pageMetadata.bookId) { languageName ->
+                                    if (!languageName.isNullOrEmpty()) {
+                                        activity?.runOnUiThread {
+                                            savedBookLanguage = languageName
                                             Log.d(
-                                                    "SentenceReadFragment",
-                                                    "Saved book language ID as final fallback: ${content.pageMetadata.languageId}"
+                                                "SentenceReadFragment",
+                                                "Fetched language name for ID ${content.pageMetadata.languageId}: $languageName"
                                             )
+                                            // Save to SharedPreferences
+                                            saveLastBookId(savedBookId ?: "")
                                         }
-                                    }
-                                } else {
-                                    // Fallback to using language ID as string if we have no valid
-                                    // language ID
-                                    savedBookLanguage = content.pageMetadata.languageId.toString()
-                                    Log.d(
+                                    } else {
+                                        // Fallback to using language ID as string if we can't
+                                        // get language name
+                                        savedBookLanguage =
+                                            content.pageMetadata.languageId.toString()
+                                        Log.d(
                                             "SentenceReadFragment",
-                                            "Saved book language ID as fallback: ${content.pageMetadata.languageId}"
-                                    )
+                                            "Saved book language ID as final fallback: ${content.pageMetadata.languageId}"
+                                        )
+                                    }
                                 }
+                            } else {
+                                // Fallback to using language ID as string if we have no valid
+                                // language ID
+                                savedBookLanguage = content.pageMetadata.languageId.toString()
+                                Log.d(
+                                    "SentenceReadFragment",
+                                    "Saved book language ID as fallback: ${content.pageMetadata.languageId}"
+                                )
                             }
+                        }
                 }
                 // Save to SharedPreferences
                 saveLastBookId(savedBookId ?: "")
@@ -1259,27 +1266,27 @@ class SentenceReadFragment :
                 if (savedBookLanguage.isNullOrEmpty()) {
                     savedBookLanguage = "1"
                     Log.d(
-                            "SentenceReadFragment",
-                            "No valid language ID in page metadata, using default: 1"
+                        "SentenceReadFragment",
+                        "No valid language ID in page metadata, using default: 1"
                     )
                 } else {
                     Log.d(
-                            "SentenceReadFragment",
-                            "Using saved book language ID: $savedBookLanguage"
+                        "SentenceReadFragment",
+                        "Using saved book language ID: $savedBookLanguage"
                     )
                 }
             }
 
             // Log the page metadata for debugging
             Log.d(
-                    "SentenceReadFragment",
-                    "Page metadata - languageId: ${content.pageMetadata.languageId}, languageName: '${content.pageMetadata.languageName}'"
+                "SentenceReadFragment",
+                "Page metadata - languageId: ${content.pageMetadata.languageId}, languageName: '${content.pageMetadata.languageName}'"
             )
 
             // Update page indicator
             pageIndicatorFragment?.updatePageCounter(
-                    content.pageMetadata.pageNum,
-                    content.pageMetadata.pageCount
+                content.pageMetadata.pageNum,
+                content.pageMetadata.pageCount
             )
 
             // Do not perform any auto-scrolling - all scrolling should be manual
@@ -1299,37 +1306,37 @@ class SentenceReadFragment :
                     if (term != null) {
                         // Use TermDataExtractor to parse the HTML content
                         val termFormData =
-                                TermDataExtractor.parseTermDataFromHtml(
-                                        content,
-                                        term.termId,
-                                        term.term
-                                )
+                            TermDataExtractor.parseTermDataFromHtml(
+                                content,
+                                term.termId,
+                                term.term
+                            )
 
                         // Create and show the NativeTermFormFragment with the complete term data
                         val termFormFragment =
-                                NativeTermFormFragment.newInstance(
-                                        termFormData = termFormData,
-                                        storedTermData = term,
-                                        onSave = { updatedTerm ->
-                                            Log.d(
-                                                    "SentenceReadFragment",
-                                                    "Term form saved: ${updatedTerm.termText}"
-                                            )
-                                            // Store the updated term data
-                                            if (updatedTerm.termId != null) {
-                                                termDataMap[updatedTerm.termId] = updatedTerm
-                                            }
+                            NativeTermFormFragment.newInstance(
+                                termFormData = termFormData,
+                                storedTermData = term,
+                                onSave = { updatedTerm ->
+                                    Log.d(
+                                        "SentenceReadFragment",
+                                        "Term form saved: ${updatedTerm.termText}"
+                                    )
+                                    // Store the updated term data
+                                    if (updatedTerm.termId != null) {
+                                        termDataMap[updatedTerm.termId] = updatedTerm
+                                    }
 
-                                            // Handle save - update the term in the UI
-                                            // The dictionary listener will handle the actual UI
-                                            // refresh with scroll preservation
-                                        },
-                                        onCancel = {
-                                            Log.d("SentenceReadFragment", "Term form cancelled")
-                                            // Handle cancel
-                                        },
-                                        dictionaryListener = this
-                                )
+                                    // Handle save - update the term in the UI
+                                    // The dictionary listener will handle the actual UI
+                                    // refresh with scroll preservation
+                                },
+                                onCancel = {
+                                    Log.d("SentenceReadFragment", "Term form cancelled")
+                                    // Handle cancel
+                                },
+                                dictionaryListener = this
+                            )
                         termFormFragment.show(childFragmentManager, "term_form")
                     }
                 } catch (e: Exception) {
@@ -1350,10 +1357,10 @@ class SentenceReadFragment :
                     if (formattedText.isNotBlank()) {
                         // Show the word popup at the tap location
                         wordPopup?.show(
-                                binding.contentScrollView,
-                                formattedText,
-                                lastTerm.tapX,
-                                lastTerm.tapY
+                            binding.contentScrollView,
+                            formattedText,
+                            lastTerm.tapX,
+                            lastTerm.tapY
                         )
                     }
                 }
@@ -1369,10 +1376,12 @@ class SentenceReadFragment :
                     // Clear the content container to prevent any raw HTML from showing
                     binding.textContentContainer.removeAllViews()
                 }
+
                 LoadingState.LOADED -> {
                     // Hide loading indicator
                     Log.d("SentenceReadFragment", "Content loaded")
                 }
+
                 LoadingState.ERROR -> {
                     // Show error message
                     Log.e("SentenceReadFragment", "Error loading content")
@@ -1405,8 +1414,8 @@ class SentenceReadFragment :
                 if (hasAudioResult.isSuccess) {
                     val hasAudio = hasAudioResult.getOrNull() == true
                     Log.d(
-                            "SentenceReadFragment",
-                            "Audio availability check result for book $bookId: $hasAudio"
+                        "SentenceReadFragment",
+                        "Audio availability check result for book $bookId: $hasAudio"
                     )
 
                     // Show or hide audio player based on actual endpoint test
@@ -1421,7 +1430,7 @@ class SentenceReadFragment :
 
                         // Show the audio toggle in the menu
                         binding.readerOptionsMenu.audioPlayerToggleContainer.visibility =
-                                View.VISIBLE
+                            View.VISIBLE
                         // Set the initial state of the switch
                         binding.readerOptionsMenu.showAudioSwitch.isChecked = showAudioPlayer
                     } else {
@@ -1431,8 +1440,8 @@ class SentenceReadFragment :
                     }
                 } else {
                     Log.e(
-                            "SentenceReadFragment",
-                            "Error checking audio availability: ${hasAudioResult.exceptionOrNull()?.message}"
+                        "SentenceReadFragment",
+                        "Error checking audio availability: ${hasAudioResult.exceptionOrNull()?.message}"
                     )
                     // If we can't check, default to hiding the audio player for safety
                     binding.audioPlayerContainer.visibility = View.GONE
@@ -1468,12 +1477,12 @@ class SentenceReadFragment :
 
             // Open the book to current page with initial probe
             Log.d(
-                    "SentenceReadFragment",
-                    "Calling viewModel.openBookToCurrentPageWithProbe($bookId)"
+                "SentenceReadFragment",
+                "Calling viewModel.openBookToCurrentPageWithProbe($bookId)"
             )
             viewModel.openBookToCurrentPageWithProbe(bookId)
         }
-                ?: run { Log.d("SentenceReadFragment", "savedBookId is null, not loading content") }
+            ?: run { Log.d("SentenceReadFragment", "savedBookId is null, not loading content") }
     }
 
     // DictionaryListener implementation for DictionaryDialogFragment
@@ -1497,8 +1506,8 @@ class SentenceReadFragment :
     // DictionaryListener implementation for NativeTermFormFragment
     override fun onTermFormDestroyed() {
         Log.d(
-                "SentenceReadFragment",
-                "Term form destroyed, clearing currentTermFormFragment reference"
+            "SentenceReadFragment",
+            "Term form destroyed, clearing currentTermFormFragment reference"
         )
         currentTermFormFragment = null
     }
@@ -1506,8 +1515,8 @@ class SentenceReadFragment :
     // DictionaryListener implementation for NativeTermFormFragment
     override fun onTermSaved(updatedTermData: TermFormData?) {
         Log.d(
-                "SentenceReadFragment",
-                "Term saved, refreshing all term highlights to update linked terms"
+            "SentenceReadFragment",
+            "Term saved, refreshing all term highlights to update linked terms"
         )
         // Refresh all term highlights to ensure linked terms are properly updated
         // This will preserve scroll position using the logic in updateTermHighlights
@@ -1549,10 +1558,10 @@ class SentenceReadFragment :
 
     // NativeTextView.TermInteractionListener implementation for sentence long press
     override fun onSentenceLongPressed(
-            sentence: String,
-            languageId: Int,
-            tapX: Float,
-            tapY: Float
+        sentence: String,
+        languageId: Int,
+        tapX: Float,
+        tapY: Float
     ) {
         Log.d("SentenceReadFragment", "Sentence long pressed: $sentence")
         Log.d("SentenceReadFragment", "Language ID: $languageId, Tap coordinates: ($tapX, $tapY)")
@@ -1613,19 +1622,19 @@ class SentenceReadFragment :
 
         // Create updated TermData with sentence context
         val updatedTerm =
-                TermData(
-                        termId = term.termId,
-                        term = term.term,
-                        languageId = term.languageId,
-                        translation = term.translation,
-                        status = term.status,
-                        parentsList = term.parentsList,
-                        parentTranslations = term.parentTranslations,
-                        tapX = term.tapX,
-                        tapY = term.tapY,
-                        segmentId = term.segmentId,
-                        sentenceContext = sentenceContext
-                )
+            TermData(
+                termId = term.termId,
+                term = term.term,
+                languageId = term.languageId,
+                translation = term.translation,
+                status = term.status,
+                parentsList = term.parentsList,
+                parentTranslations = term.parentTranslations,
+                tapX = term.tapX,
+                tapY = term.tapY,
+                segmentId = term.segmentId,
+                sentenceContext = sentenceContext
+            )
 
         // Store the current text selection
         currentTextSelection = term.term
@@ -1637,19 +1646,19 @@ class SentenceReadFragment :
     }
 
     private fun showSentenceTranslationDialog(
-            sentence: String,
-            languageId: Int,
-            tapX: Float,
-            tapY: Float
+        sentence: String,
+        languageId: Int,
+        tapX: Float,
+        tapY: Float
     ) {
         Log.d(
-                "SentenceReadFragment",
-                "showSentenceTranslationDialog called with sentence: $sentence"
+            "SentenceReadFragment",
+            "showSentenceTranslationDialog called with sentence: $sentence"
         )
 
         // Create and show the SentenceTranslationDialogFragment
         val sentenceTranslationDialogFragment =
-                SentenceTranslationDialogFragment.newInstance(sentence, languageId)
+            SentenceTranslationDialogFragment.newInstance(sentence, languageId)
         sentenceTranslationDialogFragment.show(childFragmentManager, "sentence_translation_dialog")
     }
 
@@ -1658,52 +1667,52 @@ class SentenceReadFragment :
         val term = currentSelectedTerm
         if (term != null) {
             Log.d(
-                    "SentenceReadFragment",
-                    "showTermFormWithTranslation called with term: ${term.term}, translation: '$translation'"
+                "SentenceReadFragment",
+                "showTermFormWithTranslation called with term: ${term.term}, translation: '$translation'"
             )
 
             // Create TermFormData from TermData with the fetched translation
             val termFormData =
-                    TermFormData(
-                            termId = term.termId,
-                            termText = term.term,
-                            languageId = term.languageId,
-                            context = "", // This would be determined from context in a full
-                            // implementation
-                            translation = translation,
-                            status = term.status,
-                            parents = term.parentsList,
-                            tags = emptyList()
-                    )
+                TermFormData(
+                    termId = term.termId,
+                    termText = term.term,
+                    languageId = term.languageId,
+                    context = "", // This would be determined from context in a full
+                    // implementation
+                    translation = translation,
+                    status = term.status,
+                    parents = term.parentsList,
+                    tags = emptyList()
+                )
 
             // Use nativeread.TermFormData directly
             val readTermFormData = termFormData
 
             // Create and show the NativeTermFormFragment with required parameters
             val termFormFragment =
-                    NativeTermFormFragment.newInstance(
-                            termFormData = readTermFormData,
-                            storedTermData = term,
-                            onSave = { updatedTerm ->
-                                Log.d(
-                                        "SentenceReadFragment",
-                                        "Term form saved: ${updatedTerm.termText}"
-                                )
-                                // Store the updated term data
-                                if (updatedTerm.termId != null) {
-                                    termDataMap[updatedTerm.termId] = updatedTerm
-                                }
+                NativeTermFormFragment.newInstance(
+                    termFormData = readTermFormData,
+                    storedTermData = term,
+                    onSave = { updatedTerm ->
+                        Log.d(
+                            "SentenceReadFragment",
+                            "Term form saved: ${updatedTerm.termText}"
+                        )
+                        // Store the updated term data
+                        if (updatedTerm.termId != null) {
+                            termDataMap[updatedTerm.termId] = updatedTerm
+                        }
 
-                                // Handle save - update the term in the UI
-                                // The dictionary listener will handle the actual UI refresh with
-                                // scroll preservation
-                            },
-                            onCancel = {
-                                Log.d("SentenceReadFragment", "Term form cancelled")
-                                // Handle cancel
-                            },
-                            dictionaryListener = this
-                    )
+                        // Handle save - update the term in the UI
+                        // The dictionary listener will handle the actual UI refresh with
+                        // scroll preservation
+                    },
+                    onCancel = {
+                        Log.d("SentenceReadFragment", "Term form cancelled")
+                        // Handle cancel
+                    },
+                    dictionaryListener = this
+                )
 
             // Store a reference to the term form fragment
             currentTermFormFragment = termFormFragment
@@ -1744,8 +1753,8 @@ class SentenceReadFragment :
                     // visual refresh by making a small adjustment that forces redraw
                     if (contentHeight <= scrollViewHeight) {
                         Log.d(
-                                "SentenceReadFragment",
-                                "Content is non-scrollable, forcing complete refresh"
+                            "SentenceReadFragment",
+                            "Content is non-scrollable, forcing complete refresh"
                         )
 
                         // Try to force a complete refresh of the NativeTextView
@@ -1768,8 +1777,8 @@ class SentenceReadFragment :
                 } else {
                     // Fallback to full page refresh if we can't fetch updated term data
                     Log.d(
-                            "SentenceReadFragment",
-                            "Failed to fetch updated term data, falling back to full refresh"
+                        "SentenceReadFragment",
+                        "Failed to fetch updated term data, falling back to full refresh"
                     )
                     viewModel.loadBookPage(bookId, pageInfo.currentPage)
                 }
@@ -1782,8 +1791,8 @@ class SentenceReadFragment :
                 }
             }
             Log.d(
-                    "SentenceReadFragment",
-                    "Term data fetch triggered for book ID: $bookId, page: ${pageInfo.currentPage}"
+                "SentenceReadFragment",
+                "Term data fetch triggered for book ID: $bookId, page: ${pageInfo.currentPage}"
             )
         }
     }
@@ -1802,8 +1811,8 @@ class SentenceReadFragment :
                 // If this is an interactive segment with a term ID, track the update
                 if (updatedSegment.isInteractive && updatedSegment.termId > 0) {
                     Log.d(
-                            "SentenceReadFragment",
-                            "Planning highlight update for term ID: ${updatedSegment.termId} to status: ${updatedSegment.status}"
+                        "SentenceReadFragment",
+                        "Planning highlight update for term ID: ${updatedSegment.termId} to status: ${updatedSegment.status}"
                     )
                     termUpdates[updatedSegment.termId] = updatedSegment.status
                 }
@@ -2009,7 +2018,7 @@ class SentenceReadFragment :
         } else {
             // Show a message that no term is selected
             Toast.makeText(requireContext(), "No term selected for Anki card", Toast.LENGTH_SHORT)
-                    .show()
+                .show()
         }
     }
 
@@ -2066,12 +2075,12 @@ class SentenceReadFragment :
 
         // If we don't have a language name in the metadata, try to fetch it from the server
         if (languageName.isNullOrEmpty() &&
-                        pageMetadata?.languageId != null &&
-                        pageMetadata.languageId > 0
+            pageMetadata?.languageId != null &&
+            pageMetadata.languageId > 0
         ) {
             Log.d(
-                    "SentenceReadFragment",
-                    "Language name not found in metadata, attempting to fetch from server"
+                "SentenceReadFragment",
+                "Language name not found in metadata, attempting to fetch from server"
             )
 
             // Fetch the language name using the language ID
@@ -2080,8 +2089,8 @@ class SentenceReadFragment :
                     val fetchedLanguageName = result.getOrNull()
                     if (!fetchedLanguageName.isNullOrEmpty()) {
                         Log.d(
-                                "SentenceReadFragment",
-                                "Successfully fetched language name: $fetchedLanguageName"
+                            "SentenceReadFragment",
+                            "Successfully fetched language name: $fetchedLanguageName"
                         )
                         // Update the savedBookLanguage variable
                         savedBookLanguage = fetchedLanguageName
@@ -2090,8 +2099,8 @@ class SentenceReadFragment :
                     }
                 } else {
                     Log.e(
-                            "SentenceReadFragment",
-                            "Failed to fetch language name: ${result.exceptionOrNull()?.message}"
+                        "SentenceReadFragment",
+                        "Failed to fetch language name: ${result.exceptionOrNull()?.message}"
                     )
                 }
             }
@@ -2127,8 +2136,8 @@ class SentenceReadFragment :
             // Show the menu container
             binding.readerOptionsMenu.root.visibility = View.VISIBLE
             Log.d(
-                    "SentenceReadFragment",
-                    "Menu container visibility set to VISIBLE"
+                "SentenceReadFragment",
+                "Menu container visibility set to VISIBLE"
             ) // Set initial state of switches based on current preferences
             // Hide the entire menu items for fullscreen and all known for sentence reader
             // The parent of the switch is the LinearLayout container
@@ -2148,19 +2157,19 @@ class SentenceReadFragment :
             displayBookTitle()
 
             Log.d(
-                    "SentenceReadFragment",
-                    "Switch states set"
+                "SentenceReadFragment",
+                "Switch states set"
             ) // Set up text formatting option click listener
             binding.readerOptionsMenu.textFormattingOption.setOnClickListener {
                 Log.d("SentenceReadFragment", "Text formatting option clicked")
                 hideReaderOptionsMenu()
                 Log.d(
-                        "SentenceReadFragment",
-                        "Calling textFormattingManager.showEnhancedTextFormattingDialogWithPersistence"
+                    "SentenceReadFragment",
+                    "Calling textFormattingManager.showEnhancedTextFormattingDialogWithPersistence"
                 )
                 textFormattingManager?.showEnhancedTextFormattingDialogWithPersistence(
-                        binding.textContentContainer,
-                        true // isSentenceReader = true
+                    binding.textContentContainer,
+                    true // isSentenceReader = true
                 )
                 Log.d("SentenceReadFragment", "Text formatting dialog method called")
             }
@@ -2195,9 +2204,8 @@ class SentenceReadFragment :
             }
 
             // Set up show status terms switch listener
-            binding.readerOptionsMenu.showStatusTermsSwitch.setOnCheckedChangeListener {
-                    _,
-                    isChecked ->
+            binding.readerOptionsMenu.showStatusTermsSwitch.setOnCheckedChangeListener { _,
+                                                                                         isChecked ->
                 Log.d("SentenceReadFragment", "Show status terms switch changed to: $isChecked")
                 showStatusTerms = isChecked
                 toggleStatusTermsVisibility(isChecked)
@@ -2207,7 +2215,7 @@ class SentenceReadFragment :
             // Show and set up the TTS button visibility toggle (only for sentence reader)
             binding.readerOptionsMenu.showTtsButtonSwitchContainer.visibility = View.VISIBLE
             binding.readerOptionsMenu.showTtsButtonSwitch.isChecked =
-                    getTtsButtonVisibilityPreference()
+                getTtsButtonVisibilityPreference()
 
             binding.readerOptionsMenu.showTtsButtonSwitch.setOnCheckedChangeListener { _, isChecked
                 ->
@@ -2249,7 +2257,7 @@ class SentenceReadFragment :
 
         // Create the dialog
         val helpDialog =
-                android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
+            android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
 
         // Set up the close button
         val closeButton = dialogView.findViewById<android.widget.Button>(R.id.btn_close_help)
@@ -2262,16 +2270,16 @@ class SentenceReadFragment :
     /** Get TTS button visibility preference from SharedPreferences */
     private fun getTtsButtonVisibilityPreference(): Boolean {
         val sharedPref =
-                requireContext()
-                        .getSharedPreferences("sentence_reader_settings", Context.MODE_PRIVATE)
+            requireContext()
+                .getSharedPreferences("sentence_reader_settings", Context.MODE_PRIVATE)
         return sharedPref.getBoolean("show_tts_button", true) // Default to true
     }
 
     /** Save TTS button visibility preference to SharedPreferences */
     private fun saveTtsButtonVisibilityPreference(isVisible: Boolean) {
         val sharedPref =
-                requireContext()
-                        .getSharedPreferences("sentence_reader_settings", Context.MODE_PRIVATE)
+            requireContext()
+                .getSharedPreferences("sentence_reader_settings", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putBoolean("show_tts_button", isVisible)
             apply()
@@ -2292,7 +2300,7 @@ class SentenceReadFragment :
     private fun getTtsLanguagePreference(): String {
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         return sharedPref.getString("tts_language", "Auto (Detect from Book)")
-                ?: "Auto (Detect from Book)"
+            ?: "Auto (Detect from Book)"
     }
 
     /** Map language display names to language codes */
@@ -2350,7 +2358,7 @@ class SentenceReadFragment :
         Log.d("SentenceReadFragment", "updateAudioPlayerVisibility called with: $showAudioPlayer")
         try {
             binding.audioPlayerContainer.visibility =
-                    if (showAudioPlayer) View.VISIBLE else View.GONE
+                if (showAudioPlayer) View.VISIBLE else View.GONE
             Log.d("SentenceReadFragment", "Toggling audio player visibility to: $showAudioPlayer")
         } catch (e: Exception) {
             Log.e("SentenceReadFragment", "Error in updateAudioPlayerVisibility", e)
@@ -2359,28 +2367,28 @@ class SentenceReadFragment :
 
     /** Fetch content for a specific page to be used by sentence reader */
     fun fetchPageContentForSentenceReader(
-            bookId: String,
-            pageNum: Int,
-            callback: (Result<String>) -> Unit
+        bookId: String,
+        pageNum: Int,
+        callback: (Result<String>) -> Unit
     ) {
         Log.d(
-                "SentenceReadFragment",
-                "fetchPageContentForSentenceReader called with bookId: $bookId, pageNum: $pageNum"
+            "SentenceReadFragment",
+            "fetchPageContentForSentenceReader called with bookId: $bookId, pageNum: $pageNum"
         )
 
         lifecycleScope.launch {
             try {
                 Log.d(
-                        "SentenceReadFragment",
-                        "Calling repository.fetchPageContent($bookId, $pageNum)"
+                    "SentenceReadFragment",
+                    "Calling repository.fetchPageContent($bookId, $pageNum)"
                 )
                 val result = viewModel.repository.fetchPageContent(bookId, pageNum)
 
                 if (result.isSuccess) {
                     val textContentAndHtml = result.getOrNull()!!
                     Log.d(
-                            "SentenceReadFragment",
-                            "Received HTML content for sentence reader, length: ${textContentAndHtml.htmlContent.length}"
+                        "SentenceReadFragment",
+                        "Received HTML content for sentence reader, length: ${textContentAndHtml.htmlContent.length}"
                     )
 
                     // Return the HTML content for sentence processing
@@ -2388,17 +2396,17 @@ class SentenceReadFragment :
                 } else {
                     val error = result.exceptionOrNull()
                     Log.e(
-                            "SentenceReadFragment",
-                            "Failed to fetch page content for sentence reader",
-                            error
+                        "SentenceReadFragment",
+                        "Failed to fetch page content for sentence reader",
+                        error
                     )
                     callback(Result.failure(error ?: Exception("Unknown error")))
                 }
             } catch (e: Exception) {
                 Log.e(
-                        "SentenceReadFragment",
-                        "Exception while fetching page content for sentence reader",
-                        e
+                    "SentenceReadFragment",
+                    "Exception while fetching page content for sentence reader",
+                    e
                 )
                 callback(Result.failure(e))
             }
@@ -2408,8 +2416,8 @@ class SentenceReadFragment :
     /** Show the NativeTermFormFragment for a term */
     private fun showTermForm(term: TermData) {
         Log.d(
-                "SentenceReadFragment",
-                "showTermForm called with term: ${term.term}, translation: '${term.translation}'"
+            "SentenceReadFragment",
+            "showTermForm called with term: ${term.term}, translation: '${term.translation}'"
         )
 
         // Fetch complete term data from the server before showing the form
@@ -2444,7 +2452,7 @@ class SentenceReadFragment :
             } else {
                 // For smaller paragraphs, add as single groups
                 if (countTermsInParagraph(paragraph) > 0 ||
-                                paragraph.segments.joinToString("") { it.text }.isNotBlank()
+                    paragraph.segments.joinToString("") { it.text }.isNotBlank()
                 ) {
                     sentenceGroups.add(listOf(paragraph))
                 }
@@ -2458,7 +2466,7 @@ class SentenceReadFragment :
     private fun findSentenceGroupsInParagraph(paragraph: Paragraph): List<List<Paragraph>> {
         val sentenceGroups = mutableListOf<List<Paragraph>>()
         val sentenceEndings =
-                setOf('.', '!', '?', '。', '！', '？', '।', '…') // Common sentence ending punctuation
+            setOf('.', '!', '?', '。', '！', '？', '।', '…') // Common sentence ending punctuation
         val allSegments = paragraph.segments
 
         // Find sentence boundaries by looking for ending punctuation in segments
@@ -2485,12 +2493,12 @@ class SentenceReadFragment :
                     // Only add this group if it has actual terms (not just punctuation/spaces)
                     if (segmentGroup.isNotEmpty() && countTermsInSegmentList(segmentGroup) > 0) {
                         sentenceGroups.add(
-                                listOf(
-                                        Paragraph(
-                                                id = "${paragraph.id}_part_${sentenceGroups.size}",
-                                                segments = segmentGroup
-                                        )
+                            listOf(
+                                Paragraph(
+                                    id = "${paragraph.id}_part_${sentenceGroups.size}",
+                                    segments = segmentGroup
                                 )
+                            )
                         )
                     }
                     startIdx = boundaryIdx
@@ -2504,12 +2512,12 @@ class SentenceReadFragment :
                 if (remainingSegments.isNotEmpty() && countTermsInSegmentList(remainingSegments) > 0
                 ) {
                     sentenceGroups.add(
-                            listOf(
-                                    Paragraph(
-                                            id = "${paragraph.id}_part_${sentenceGroups.size}",
-                                            segments = remainingSegments
-                                    )
+                        listOf(
+                            Paragraph(
+                                id = "${paragraph.id}_part_${sentenceGroups.size}",
+                                segments = remainingSegments
                             )
+                        )
                     )
                 }
             }
@@ -2525,7 +2533,7 @@ class SentenceReadFragment :
 
     /** Count interactive terms (words that can be clicked) in a list of segments */
     private fun countTermsInSegmentList(
-            segments: List<com.example.luteforandroidv2.ui.nativeread.Term.TextSegment>
+        segments: List<com.example.luteforandroidv2.ui.nativeread.Term.TextSegment>
     ): Int {
         return segments.count { it.isInteractive && !isPunctuationOrSpace(it.text) }
     }
@@ -2553,10 +2561,10 @@ class SentenceReadFragment :
 
         // Create a new TextContent with only the current sentence group
         val currentSentenceContent =
-                TextContent(
-                        paragraphs = sentenceGroups[currentSentenceIndex],
-                        pageMetadata = content.pageMetadata
-                )
+            TextContent(
+                paragraphs = sentenceGroups[currentSentenceIndex],
+                pageMetadata = content.pageMetadata
+            )
 
         // Render the current sentence group
         textRenderer.renderTextContent(binding.textContentContainer, currentSentenceContent, this)
@@ -2657,7 +2665,7 @@ class SentenceReadFragment :
      * sentences (< 4 terms) with neighbors
      */
     private fun processContentIntoSentenceGroupsFallback(
-            content: TextContent
+        content: TextContent
     ): List<List<Paragraph>> {
         Log.d("SentenceReadFragment", "processContentIntoSentenceGroupsFallback called")
         val sentenceGroups = mutableListOf<List<Paragraph>>()
@@ -2715,8 +2723,8 @@ class SentenceReadFragment :
         savedBookId?.let { bookId ->
             val pageInfo = navigationController.getCurrentPageInfo()
             Log.d(
-                    "SentenceReadFragment",
-                    "Refreshing page content for book ID: $bookId, page: ${pageInfo.currentPage}"
+                "SentenceReadFragment",
+                "Refreshing page content for book ID: $bookId, page: ${pageInfo.currentPage}"
             )
 
             // Reload the current page to get updated term statuses
@@ -2749,11 +2757,11 @@ class SentenceReadFragment :
         // Check if AI is configured
         if (!aiSettingsManager.isAiConfigured()) {
             Toast.makeText(
-                            requireContext(),
-                            "AI endpoint not configured. Please check app settings.",
-                            Toast.LENGTH_LONG
-                    )
-                    .show()
+                requireContext(),
+                "AI endpoint not configured. Please check app settings.",
+                Toast.LENGTH_LONG
+            )
+                .show()
             return
         }
 
@@ -2775,18 +2783,18 @@ class SentenceReadFragment :
 
         // Make network request to AI endpoint
         Thread {
-                    try {
-                        val url = java.net.URL(aiEndpoint)
-                        val connection = url.openConnection() as java.net.HttpURLConnection
-                        connection.requestMethod = "POST"
-                        connection.connectTimeout = 10000 // 10 seconds
-                        connection.readTimeout = 30000 // 30 seconds
-                        connection.doOutput = true
-                        connection.setRequestProperty("Content-Type", "application/json")
+            try {
+                val url = java.net.URL(aiEndpoint)
+                val connection = url.openConnection() as java.net.HttpURLConnection
+                connection.requestMethod = "POST"
+                connection.connectTimeout = 10000 // 10 seconds
+                connection.readTimeout = 30000 // 30 seconds
+                connection.doOutput = true
+                connection.setRequestProperty("Content-Type", "application/json")
 
-                        // Prepare request body in OpenAI format
-                        val requestBody =
-                                """
+                // Prepare request body in OpenAI format
+                val requestBody =
+                    """
                         {
                           "model": "$aiModel",
                           "messages": [
@@ -2796,60 +2804,60 @@ class SentenceReadFragment :
                         }
                         """.trimIndent()
 
-                        Log.d("SentenceReadFragment", "Sending request body: $requestBody")
+                Log.d("SentenceReadFragment", "Sending request body: $requestBody")
 
-                        // Write request body
-                        val outputStream = connection.outputStream
-                        outputStream.write(requestBody.toByteArray())
-                        outputStream.flush()
-                        outputStream.close()
+                // Write request body
+                val outputStream = connection.outputStream
+                outputStream.write(requestBody.toByteArray())
+                outputStream.flush()
+                outputStream.close()
 
-                        val responseCode = connection.responseCode
-                        Log.d("SentenceReadFragment", "AI response code: $responseCode")
+                val responseCode = connection.responseCode
+                Log.d("SentenceReadFragment", "AI response code: $responseCode")
 
-                        if (responseCode == 200) {
-                            val inputStream = connection.inputStream
-                            val response = inputStream.bufferedReader().use { it.readText() }
-                            inputStream.close()
+                if (responseCode == 200) {
+                    val inputStream = connection.inputStream
+                    val response = inputStream.bufferedReader().use { it.readText() }
+                    inputStream.close()
 
-                            Log.d("SentenceReadFragment", "AI response: $response")
+                    Log.d("SentenceReadFragment", "AI response: $response")
 
-                            // Parse response and update UI
-                            activity?.runOnUiThread { handleAiResponse(response) }
-                        } else {
-                            // Handle error response
-                            val errorStream = connection.errorStream
-                            val errorResponse =
-                                    errorStream?.bufferedReader()?.use { it.readText() }
-                                            ?: "Unknown error"
-                            errorStream?.close()
+                    // Parse response and update UI
+                    activity?.runOnUiThread { handleAiResponse(response) }
+                } else {
+                    // Handle error response
+                    val errorStream = connection.errorStream
+                    val errorResponse =
+                        errorStream?.bufferedReader()?.use { it.readText() }
+                            ?: "Unknown error"
+                    errorStream?.close()
 
-                            Log.e("SentenceReadFragment", "AI error response: $errorResponse")
+                    Log.e("SentenceReadFragment", "AI error response: $errorResponse")
 
-                            activity?.runOnUiThread {
-                                Toast.makeText(
-                                                requireContext(),
-                                                "AI request failed: $errorResponse",
-                                                Toast.LENGTH_LONG
-                                        )
-                                        .show()
-                            }
-                        }
-
-                        connection.disconnect()
-                    } catch (e: Exception) {
-                        Log.e("SentenceReadFragment", "Error sending sentence to AI", e)
-                        activity?.runOnUiThread {
-                            Toast.makeText(
-                                            requireContext(),
-                                            "Error connecting to AI service: ${e.message}",
-                                            Toast.LENGTH_LONG
-                                    )
-                                    .show()
-                        }
+                    activity?.runOnUiThread {
+                        Toast.makeText(
+                            requireContext(),
+                            "AI request failed: $errorResponse",
+                            Toast.LENGTH_LONG
+                        )
+                            .show()
                     }
                 }
-                .start()
+
+                connection.disconnect()
+            } catch (e: Exception) {
+                Log.e("SentenceReadFragment", "Error sending sentence to AI", e)
+                activity?.runOnUiThread {
+                    Toast.makeText(
+                        requireContext(),
+                        "Error connecting to AI service: ${e.message}",
+                        Toast.LENGTH_LONG
+                    )
+                        .show()
+                }
+            }
+        }
+            .start()
     }
 
     /** Handle AI response and display in popup */
@@ -2863,11 +2871,11 @@ class SentenceReadFragment :
         } catch (e: Exception) {
             Log.e("SentenceReadFragment", "Error parsing AI response", e)
             Toast.makeText(
-                            requireContext(),
-                            "Error processing AI response: ${e.message}",
-                            Toast.LENGTH_LONG
-                    )
-                    .show()
+                requireContext(),
+                "Error processing AI response: ${e.message}",
+                Toast.LENGTH_LONG
+            )
+                .show()
         }
     }
 
@@ -2918,8 +2926,8 @@ class SentenceReadFragment :
                     // If there was an error fetching the book title, show the book ID
                     binding.readerOptionsMenu.bookTitleHeader.text = "Book $bookId"
                     Log.e(
-                            "SentenceReadFragment",
-                            "Error fetching book title: ${bookTitleResult.exceptionOrNull()?.message}"
+                        "SentenceReadFragment",
+                        "Error fetching book title: ${bookTitleResult.exceptionOrNull()?.message}"
                     )
                 }
             } catch (e: Exception) {
@@ -2954,11 +2962,11 @@ class SentenceReadFragment :
         } catch (e: Exception) {
             Log.e("SentenceReadFragment", "Error showing AI response dialog", e)
             Toast.makeText(
-                            requireContext(),
-                            "Error showing AI response: ${e.message}",
-                            Toast.LENGTH_LONG
-                    )
-                    .show()
+                requireContext(),
+                "Error showing AI response: ${e.message}",
+                Toast.LENGTH_LONG
+            )
+                .show()
         }
     }
 
@@ -2970,9 +2978,9 @@ class SentenceReadFragment :
 
         // We need to use ServerSettingsManager to get the server URL
         val serverSettingsManager =
-                com.example.luteforandroidv2.ui.settings.ServerSettingsManager.getInstance(
-                        requireContext()
-                )
+            com.example.luteforandroidv2.ui.settings.ServerSettingsManager.getInstance(
+                requireContext()
+            )
         if (!serverSettingsManager.isServerUrlConfigured()) {
             Log.e("SentenceReadFragment", "Server URL not configured")
             return languageName
@@ -3001,13 +3009,13 @@ class SentenceReadFragment :
                 // Parse the HTML response to extract the language name
                 languageName = parseLanguageNameFromHtml(content)
                 Log.d(
-                        "SentenceReadFragment",
-                        "Parsed language name: $languageName for ID: $languageId"
+                    "SentenceReadFragment",
+                    "Parsed language name: $languageName for ID: $languageId"
                 )
             } else {
                 Log.e(
-                        "SentenceReadFragment",
-                        "Language info fetch failed with response code: $responseCode"
+                    "SentenceReadFragment",
+                    "Language info fetch failed with response code: $responseCode"
                 )
             }
         } catch (e: Exception) {
@@ -3035,7 +3043,7 @@ class SentenceReadFragment :
             for (element in headerElements) {
                 val text = element.text()
                 if (text.contains("Edit", ignoreCase = true) &&
-                                text.contains("Language", ignoreCase = true)
+                    text.contains("Language", ignoreCase = true)
                 ) {
                     // Extract the language name - this could be in format "Edit Language: English"
                     if (text.contains(":")) {

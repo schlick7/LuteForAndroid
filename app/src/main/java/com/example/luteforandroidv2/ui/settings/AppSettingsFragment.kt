@@ -19,6 +19,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import java.util.concurrent.TimeUnit
 import org.jsoup.Jsoup
 
 class AppSettingsFragment : Fragment() {
@@ -32,10 +34,11 @@ class AppSettingsFragment : Fragment() {
     private lateinit var themeModeAdapter: ArrayAdapter<String>
     private lateinit var nativeReaderThemeModeAdapter: ArrayAdapter<String>
     private lateinit var defaultReaderAdapter: ArrayAdapter<String>
+    private lateinit var defaultBooksAdapter: ArrayAdapter<String>
     private lateinit var aiSettingsManager: AiSettingsManager
     private lateinit var ttsEngineAdapter: ArrayAdapter<String>
     private lateinit var ttsLanguageAdapter: ArrayAdapter<String>
-    private lateinit var ttsVoiceAdapter: ArrayAdapter<String>
+    // TTS voice is now a text input field instead of spinner
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -98,14 +101,20 @@ class AppSettingsFragment : Fragment() {
         // Set up the default reader selection spinner
         setupDefaultReaderSelection()
 
-        // Set up the default reader selection spinner
-        setupDefaultReaderSelection()
+        // Set up the default books selection spinner
+        setupDefaultBooksSelection()
 
         // Set up the save default reader button
         binding.buttonSaveDefaultReader.setOnClickListener { saveDefaultReaderSettings() }
 
+        // Set up the save default books button
+        binding.buttonSaveDefaultBooks.setOnClickListener { saveDefaultBooksSettings() }
+
         // Set up the save AI settings button
         binding.buttonSaveAiSettings.setOnClickListener { saveAiSettings() }
+
+        // Set up the show AI instructions button
+        binding.buttonShowAiInstructions.setOnClickListener { showAiInstructions() }
 
         // Load AI settings
         loadAiSettings()
@@ -730,6 +739,46 @@ class AppSettingsFragment : Fragment() {
             .show()
     }
 
+    private fun setupDefaultBooksSelection() {
+        // Create default books options array
+        val defaultBooksOptions = arrayOf("Books View", "Native Books")
+        defaultBooksAdapter =
+            ArrayAdapter(requireContext(), R.layout.spinner_item, defaultBooksOptions)
+        defaultBooksAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
+        binding.spinnerDefaultBooks.adapter = defaultBooksAdapter
+
+        // Load previously selected default books setting, defaulting to "Native Books"
+        val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        val selectedDefaultBooks = sharedPref.getString("default_books", "Native Books")
+        val position = defaultBooksOptions.indexOf(selectedDefaultBooks)
+        if (position >= 0) {
+            binding.spinnerDefaultBooks.setSelection(position)
+        } else {
+            // Default to "Native Books"
+            binding.spinnerDefaultBooks.setSelection(1) // Index 1 is "Native Books"
+        }
+    }
+
+    private fun saveDefaultBooksSettings() {
+        // Save the selected default books
+        val selectedDefaultBooks = binding.spinnerDefaultBooks.selectedItem.toString()
+        val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putString("default_books", selectedDefaultBooks)
+            apply()
+        }
+
+        // Update the status
+        binding.textViewStatus.text = "Default books settings saved successfully!"
+        binding.textViewStatus.setTextColor(
+            resources.getColor(android.R.color.holo_green_dark, null)
+        )
+
+        // Show a toast message
+        Toast.makeText(context, "Default books settings saved successfully", Toast.LENGTH_SHORT)
+            .show()
+    }
+
     private fun saveThemeSettings() {
         // Save the selected theme mode
         val selectedThemeMode = binding.spinnerThemeMode.selectedItem.toString()
@@ -927,8 +976,8 @@ class AppSettingsFragment : Fragment() {
     }
 
     private fun setupTtsEngineSelection() {
-        // Create TTS engine options array - starting with Android TTS
-        val ttsEngineOptions = arrayOf("Android TTS")
+        // Create TTS engine options array - starting with Android TTS and adding Kokoro
+        val ttsEngineOptions = arrayOf("Android TTS", "Kokoro TTS")
         ttsEngineAdapter = ArrayAdapter(requireContext(), R.layout.spinner_item, ttsEngineOptions)
         ttsEngineAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
         binding.spinnerTtsEngine.adapter = ttsEngineAdapter
@@ -942,6 +991,28 @@ class AppSettingsFragment : Fragment() {
         } else {
             // Default to "Android TTS"
             binding.spinnerTtsEngine.setSelection(0)
+        }
+
+        // Set up visibility for Kokoro URL when engine selection changes
+        binding.spinnerTtsEngine.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedEngine = ttsEngineOptions[position]
+                if (selectedEngine == "Kokoro TTS") {
+                    binding.textViewKokoroUrlLabel.visibility = View.VISIBLE
+                    binding.editTextKokoroUrl.visibility = View.VISIBLE
+                    // Load saved Kokoro URL
+                    val kokoroUrl = sharedPref.getString("kokoro_server_url", "http://192.168.1.100:8880")
+                    binding.editTextKokoroUrl.setText(kokoroUrl)
+                } else {
+                    binding.textViewKokoroUrlLabel.visibility = View.GONE
+                    binding.editTextKokoroUrl.visibility = View.GONE
+                }
+            }
+
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
+                binding.textViewKokoroUrlLabel.visibility = View.GONE
+                binding.editTextKokoroUrl.visibility = View.GONE
+            }
         }
 
         // Set up TTS language selection spinner
@@ -1014,35 +1085,122 @@ class AppSettingsFragment : Fragment() {
         val pitchProgress = binding.seekBarTtsPitch.progress
         val ttsPitch = (pitchProgress / 100f) + 0.8f // Convert 0-40 range to 0.8-1.2 range
 
-        // Get the selected TTS voice
-        val selectedTtsVoice =
-            if (ttsVoiceAdapter.count > 0) {
-                binding.spinnerTtsVoice.selectedItem?.toString() ?: ""
-            } else {
-                ""
-            }
+        // Get the selected TTS voice from the text field
+        val selectedTtsVoice = binding.editTextTtsVoice.text.toString().trim()
 
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        with(sharedPref.edit()) {
-            putString("tts_engine", selectedTtsEngine)
-            putString("tts_language", selectedTtsLanguage)
-            putFloat("tts_rate", ttsRate)
-            putFloat("tts_pitch", ttsPitch)
-            putString("tts_voice", selectedTtsVoice)
-            apply()
+
+        if (selectedTtsEngine == "Kokoro TTS") {
+            // Validate Kokoro server URL before saving
+            validateKokoroServerUrl { isValid ->
+                if (isValid) {
+                    // Save settings
+                    with(sharedPref.edit()) {
+                        putString("tts_engine", selectedTtsEngine)
+                        putString("tts_language", selectedTtsLanguage)
+                        putFloat("tts_rate", ttsRate)
+                        putFloat("tts_pitch", ttsPitch)
+                        putString("tts_voice", selectedTtsVoice)
+
+                        val kokoroUrl = binding.editTextKokoroUrl.text.toString().trim()
+                        if (kokoroUrl.isNotEmpty()) {
+                            putString("kokoro_server_url", kokoroUrl)
+                        } else {
+                            // Use default URL if empty
+                            putString("kokoro_server_url", "http://192.168.1.100:8880")
+                        }
+
+                        apply()
+                    }
+
+                    // Apply the settings to the TTS manager
+                    applyTtsSettingsToManager(ttsRate, ttsPitch, selectedTtsVoice)
+
+                    // Update the status
+                    binding.textViewStatus.text = "TTS settings saved successfully!"
+                    binding.textViewStatus.setTextColor(
+                        resources.getColor(android.R.color.holo_green_dark, null)
+                    )
+
+                    // Show a toast message
+                    Toast.makeText(context, "TTS settings saved successfully", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Show error message
+                    binding.textViewStatus.text = "Error: Kokoro server is not reachable. Please check the URL."
+                    binding.textViewStatus.setTextColor(
+                        resources.getColor(android.R.color.holo_red_dark, null)
+                    )
+                    Toast.makeText(context, "Kokoro server is not reachable. Please check the URL.", Toast.LENGTH_LONG)
+                        .show()
+                }
+            }
+        } else {
+            // Save settings without validation for Android TTS
+            with(sharedPref.edit()) {
+                putString("tts_engine", selectedTtsEngine)
+                putString("tts_language", selectedTtsLanguage)
+                putFloat("tts_rate", ttsRate)
+                putFloat("tts_pitch", ttsPitch)
+                putString("tts_voice", selectedTtsVoice)
+
+                apply()
+            }
+
+            // Apply the settings to the TTS manager
+            applyTtsSettingsToManager(ttsRate, ttsPitch, selectedTtsVoice)
+
+            // Update the status
+            binding.textViewStatus.text = "TTS settings saved successfully!"
+            binding.textViewStatus.setTextColor(
+                resources.getColor(android.R.color.holo_green_dark, null)
+            )
+
+            // Show a toast message
+            Toast.makeText(context, "TTS settings saved successfully", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun validateKokoroServerUrl(callback: (Boolean) -> Unit) {
+        val serverUrl = binding.editTextKokoroUrl.text.toString().trim()
+
+        if (serverUrl.isEmpty()) {
+            callback(false)
+            return
         }
 
-        // Apply the settings to the TTS manager
-        applyTtsSettingsToManager(ttsRate, ttsPitch, selectedTtsVoice)
+        // Basic URL validation
+        if (!serverUrl.startsWith("http://") && !serverUrl.startsWith("https://")) {
+            callback(false)
+            return
+        }
 
-        // Update the status
-        binding.textViewStatus.text = "TTS settings saved successfully!"
-        binding.textViewStatus.setTextColor(
-            resources.getColor(android.R.color.holo_green_dark, null)
-        )
+        // Create a coroutine to make the network request
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = OkHttpClient.Builder()
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .readTimeout(10, TimeUnit.SECONDS)
+                    .build()
 
-        // Show a toast message
-        Toast.makeText(context, "TTS settings saved successfully", Toast.LENGTH_SHORT).show()
+                // Test the server by making a simple request to a known endpoint
+                val apiUrl = "$serverUrl/v1/audio/voices"
+                val request = Request.Builder()
+                    .url(apiUrl)
+                    .build()
+
+                val response = client.newCall(request).execute()
+                val isValid = response.isSuccessful
+
+                withContext(Dispatchers.Main) {
+                    callback(isValid)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("AppSettingsFragment", "Error validating Kokoro server", e)
+                withContext(Dispatchers.Main) {
+                    callback(false)
+                }
+            }
+        }
     }
 
     private fun applyTtsSettingsToManager(rate: Float, pitch: Float, voice: String) {
@@ -1069,13 +1227,27 @@ class AppSettingsFragment : Fragment() {
         // Load the selected TTS engine from SharedPreferences
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         val selectedTtsEngine = sharedPref.getString("tts_engine", "Android TTS")
-        val ttsEngineOptions = arrayOf("Android TTS")
+        val ttsEngineOptions = arrayOf("Android TTS", "Kokoro TTS")
         val position = ttsEngineOptions.indexOf(selectedTtsEngine)
         if (position >= 0) {
             binding.spinnerTtsEngine.setSelection(position)
+
+            // Show/hide Kokoro URL field based on selected engine
+            if (selectedTtsEngine == "Kokoro TTS") {
+                binding.textViewKokoroUrlLabel.visibility = View.VISIBLE
+                binding.editTextKokoroUrl.visibility = View.VISIBLE
+                // Load saved Kokoro URL
+                val kokoroUrl = sharedPref.getString("kokoro_server_url", "http://192.168.1.100:8880")
+                binding.editTextKokoroUrl.setText(kokoroUrl)
+            } else {
+                binding.textViewKokoroUrlLabel.visibility = View.GONE
+                binding.editTextKokoroUrl.visibility = View.GONE
+            }
         } else {
             // Default to "Android TTS"
             binding.spinnerTtsEngine.setSelection(0)
+            binding.textViewKokoroUrlLabel.visibility = View.GONE
+            binding.editTextKokoroUrl.visibility = View.GONE
         }
 
         // Load the selected TTS language from SharedPreferences
@@ -1134,20 +1306,9 @@ class AppSettingsFragment : Fragment() {
         binding.seekBarTtsPitch.progress = pitchProgress.coerceIn(0, 40)
         binding.textViewTtsPitchValue.text = "Current pitch: ${String.format("%.1f", ttsPitch)}x"
 
-        // Load TTS voice from SharedPreferences
+        // Load TTS voice from SharedPreferences into the text field
         val selectedTtsVoice = sharedPref.getString("tts_voice", "")
-        val voiceOptions = getAvailableTtsVoices()
-        if (voiceOptions.isNotEmpty()) {
-            val voicePosition = voiceOptions.indexOf(selectedTtsVoice)
-            if (voicePosition >= 0) {
-                binding.spinnerTtsVoice.setSelection(voicePosition)
-            } else {
-                // Default to first voice if available
-                if (voiceOptions.isNotEmpty()) {
-                    binding.spinnerTtsVoice.setSelection(0)
-                }
-            }
-        }
+        binding.editTextTtsVoice.setText(selectedTtsVoice)
     }
 
     private fun setupTtsRateSeekBar() {
@@ -1211,22 +1372,15 @@ class AppSettingsFragment : Fragment() {
     }
 
     private fun setupTtsVoiceSelection() {
-        // Get available voices from TTS and sort them alphabetically
-        val voiceOptions = getAvailableTtsVoices().sorted()
-        ttsVoiceAdapter = ArrayAdapter(requireContext(), R.layout.spinner_item, voiceOptions)
-        ttsVoiceAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-        binding.spinnerTtsVoice.adapter = ttsVoiceAdapter
+        // Set up the button to show available voices
+        binding.buttonShowVoices.setOnClickListener {
+            showAvailableVoicesDialog()
+        }
 
         // Load previously selected TTS voice
         val sharedPref = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         val selectedTtsVoice = sharedPref.getString("tts_voice", "")
-        val position = voiceOptions.indexOf(selectedTtsVoice)
-        if (position >= 0) {
-            binding.spinnerTtsVoice.setSelection(position)
-        } else if (voiceOptions.isNotEmpty()) {
-            // Default to first voice
-            binding.spinnerTtsVoice.setSelection(0)
-        }
+        binding.editTextTtsVoice.setText(selectedTtsVoice)
     }
 
     private fun getAvailableTtsVoices(): List<String> {
@@ -1246,6 +1400,140 @@ class AppSettingsFragment : Fragment() {
             android.util.Log.e("AppSettingsFragment", "Error getting available TTS voices", e)
             return listOf("Default Voice")
         }
+    }
+
+    private fun showAvailableVoicesDialog() {
+        // Get available voices based on the selected TTS engine
+        val selectedTtsEngine = binding.spinnerTtsEngine.selectedItem?.toString() ?: "Android TTS"
+        val voiceOptions = if (selectedTtsEngine == "Kokoro TTS") {
+            // For Kokoro TTS, provide all available voice names with language and grade info
+            listOf(
+                // American English (F: 11, M: 9)
+                "af_heart (English A)",
+                "af_alloy (English C)",
+                "af_aoede (English C+)",
+                "af_bella (English A-)",
+                "af_jessica (English D)",
+                "af_kore (English C+)",
+                "af_nicole (English B-)",
+                "af_nova (English C)",
+                "af_river (English D)",
+                "af_sarah (English C+)",
+                "af_sky (English C-)",
+                "am_adam (English F+)",
+                "am_echo (English D)",
+                "am_eric (English D)",
+                "am_fenrir (English C+)",
+                "am_liam (English D)",
+                "am_michael (English C+)",
+                "am_onyx (English D)",
+                "am_puck (English C+)",
+                "am_santa (English D-)",
+
+                // British English (F: 4, M: 4)
+                "bf_alice (English D)",
+                "bf_emma (English B-)",
+                "bf_isabella (English C)",
+                "bf_lily (English D)",
+                "bm_daniel (English D)",
+                "bm_fable (English C)",
+                "bm_george (English C)",
+                "bm_lewis (English D+)",
+
+                // Japanese (F: 4, M: 1)
+                "jf_alpha (Japanese C+)",
+                "jf_gongitsune (Japanese C)",
+                "jf_nezumi (Japanese C-)",
+                "jf_tebukuro (Japanese C)",
+                "jm_kumo (Japanese C)",
+
+                // Mandarin Chinese (F: 4, M: 4)
+                "zf_xiaobei (Chinese D)",
+                "zf_xiaoni (Chinese D)",
+                "zf_xiaoxiao (Chinese D)",
+                "zf_xiaoyi (Chinese D)",
+                "zm_yunjian (Chinese D)",
+                "zm_yunxi (Chinese D)",
+                "zm_yunxia (Chinese D)",
+                "zm_yunyang (Chinese D)",
+
+                // Spanish (F: 1, M: 2)
+                "ef_dora (Spanish)",
+                "em_alex (Spanish)",
+                "em_santa (Spanish)",
+
+                // French (F: 1)
+                "ff_siwis (French B-)",
+
+                // Hindi (F: 2, M: 2)
+                "hf_alpha (Hindi C)",
+                "hf_beta (Hindi C)",
+                "hm_omega (Hindi C)",
+                "hm_psi (Hindi C)",
+
+                // Italian (F: 1, M: 1)
+                "if_sara (Italian C)",
+                "im_nicola (Italian C)",
+
+                // Brazilian Portuguese (F: 1, M: 2)
+                "pf_dora (Portuguese)",
+                "pm_alex (Portuguese)",
+                "pm_santa (Portuguese)"
+            )
+        } else {
+            // For Android TTS, get available voices from the system
+            getAvailableTtsVoices()
+        }
+
+        // Create a dialog with the voice options
+        val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        builder.setTitle("Select Voice(s)")
+
+        // Create a string array from the voice options
+        val voiceArray = voiceOptions.toTypedArray()
+
+        // Create a single-select list for now (can be enhanced for multi-select later)
+        builder.setItems(voiceArray) { _, which ->
+            val selectedVoiceWithInfo = voiceArray[which]
+            // Extract just the voice name part (before the parentheses)
+            val selectedVoice = if (selectedVoiceWithInfo.contains(" (")) {
+                selectedVoiceWithInfo.substring(0, selectedVoiceWithInfo.indexOf(" ("))
+            } else {
+                selectedVoiceWithInfo
+            }
+            binding.editTextTtsVoice.setText(selectedVoice)
+        }
+
+        builder.setNegativeButton("Cancel", null)
+        builder.setPositiveButton("Voice Mixing Help") { _, _ ->
+            // Show help message about voice mixing
+            val helpMessage = "Voice mixing:\n- Use single voice: af_bella\n" +
+                    "- Mix voices: af_bella+af_heart\n" +
+                    "- Weighted mix: af_bella(2)+af_heart(1) for 67%/33% mix"
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Voice Mixing Help")
+                .setMessage(helpMessage)
+                .setPositiveButton("OK", null)
+                .show()
+        }
+
+        builder.show()
+    }
+
+    private fun showAiInstructions() {
+        val instructionsMessage =
+            "AI Integration Instructions:\n\n" +
+                    "For local LLM usage with OpenAI endpoints like Ollama or llama.cpp:\n\n" +
+                    "1. Install and run Ollama (default port: 11434) or llama.cpp server (default port: 8080)\n" +
+                    "2. Enter the endpoint URL (e.g., http://localhost:11434/v1/chat/completions for Ollama)\n" +
+                    "3. Enter the model name (e.g., llama3, mistral, phi, Qwen3-30B-A3B)\n" +
+                    "4. Customize prompts as needed and save settings"
+
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("AI Integration Instructions")
+            .setMessage(instructionsMessage)
+            .setPositiveButton("OK", null)
+            .show()
     }
 
     override fun onDestroyView() {

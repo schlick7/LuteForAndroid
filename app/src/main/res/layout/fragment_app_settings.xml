@@ -264,7 +264,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Default Reader Settings"
+            android:text="Default Views Settings"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/lute_on_background"
@@ -291,6 +291,28 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Save Default Reader"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Default Books View"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinner_default_books"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/spinner_border" />
+
+        <Button
+            android:id="@+id/button_save_default_books"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Default Books"
             android:layout_marginBottom="16dp" />
 
         <!-- AI Settings Section -->
@@ -429,7 +451,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Save AI Settings"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/button_show_ai_instructions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Show AI Integration Instructions"
+            android:layout_marginBottom="8dp" />
 
         <!-- TTS Settings Section -->
         <TextView
@@ -456,6 +485,28 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:background="@drawable/spinner_border" />
+
+        <!-- Kokoro Server URL - only shown when Kokoro is selected -->
+        <TextView
+            android:id="@+id/text_view_kokoro_url_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Kokoro Server URL"
+            android:textSize="16sp"
+            android:textColor="@color/lute_on_background"
+            android:layout_marginBottom="4dp"
+            android:visibility="gone" />
+
+        <EditText
+            android:id="@+id/edit_text_kokoro_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter Kokoro server URL (e.g., http://192.168.1.100:8880)"
+            android:inputType="textUri"
+            android:textColor="@color/lute_on_background"
+            android:textColorHint="@color/lute_on_surface"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="match_parent"
@@ -536,69 +587,36 @@
             android:textColor="@color/lute_on_background"
             android:layout_marginBottom="4dp" />
 
-        <Spinner
-            android:id="@+id/spinner_tts_voice"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:background="@drawable/spinner_border" />
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <EditText
+                android:id="@+id/edit_text_tts_voice"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Enter voice name(s) (e.g., af_bella or af_bella+af_heart)"
+                android:inputType="text"
+                android:textColor="@color/lute_on_background"
+                android:textColorHint="@color/lute_on_surface" />
+
+            <Button
+                android:id="@+id/button_show_voices"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Show Voices"
+                android:layout_marginStart="8dp" />
+
+        </LinearLayout>
 
         <Button
             android:id="@+id/button_save_tts_settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Save TTS Settings"
-            android:layout_marginBottom="16dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="AI Integration Instructions"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/lute_on_background"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="16dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="For local LLM usage with OpenAI endpoints like Ollama or llama.cpp:"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="@color/lute_on_background"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="1. Install and run Ollama (default port: 11434) or llama.cpp server (default port: 8080)"
-            android:textSize="14sp"
-            android:textColor="@color/lute_on_background"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="2. Enter the endpoint URL (e.g., http://localhost:11434/v1/chat/completions for Ollama)"
-            android:textSize="14sp"
-            android:textColor="@color/lute_on_background"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="3. Enter the model name (e.g., llama3, mistral, phi, Qwen3-30B-A3B)"
-            android:textSize="14sp"
-            android:textColor="@color/lute_on_background"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="4. Customize prompts as needed and save settings"
-            android:textSize="14sp"
-            android:textColor="@color/lute_on_background"
             android:layout_marginBottom="16dp" />
 
     </LinearLayout>
