@@ -26,3 +26,8 @@ lastthread.md
 
 # Gradle properties with sensitive data
 gradle.properties.local
+
+# Refactoring and documentation files
+NativeTermFormRefactoringPlan.md
+ChangeLog.md
+refactorplan.md
