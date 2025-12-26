@@ -15,9 +15,8 @@ kotlin.code.style=official
 # thereby reducing the size of the R class for that library
 android.nonTransitiveRClass=true
 
-# Signing configuration (DO NOT COMMIT TO VERSION CONTROL)
-# Replace these with your actual keystore credentials
-RELEASE_STORE_FILE=my-release-key.keystore
-RELEASE_STORE_PASSWORD=your_secure_store_password_here
-RELEASE_KEY_ALIAS=luteapp
-RELEASE_KEY_PASSWORD=your_secure_key_password_here
+# Note: For release builds, create a gradle.properties.local file with:
+# RELEASE_STORE_FILE=my-release-key.keystore
+# RELEASE_STORE_PASSWORD=your_secure_store_password_here
+# RELEASE_KEY_ALIAS=luteapp
+# RELEASE_KEY_PASSWORD=your_secure_key_password_here

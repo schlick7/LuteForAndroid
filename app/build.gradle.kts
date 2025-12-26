@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +8,13 @@ plugins {
 }
 
 apply(from = "version.gradle.kts")
+
+// Load local properties for sensitive data
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("gradle.properties.local")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
 
 android {
     namespace = "com.example.luteforandroidv2"
@@ -14,18 +24,19 @@ android {
         applicationId = "com.example.luteforandroidv2"
         minSdk = 26
         targetSdk = 33
-        versionCode = 1104 // Using the patch number from strings.xml as versionCode
-        versionName = "0.5.31" // Matching the version in strings.xml
+        versionCode = 1106 // Using the patch number from strings.xml as versionCode
+        versionName = "0.5.33" // Matching the version in strings.xml
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
         register("release") {
-            storeFile = file("my-release-key.keystore")
-            storePassword = "android123"
-            keyAlias = "luteapp"
-            keyPassword = "android123"
+            // Try to load from local properties first, then fall back to project properties
+            storeFile = file(localProperties.getProperty("RELEASE_STORE_FILE") ?: project.properties["RELEASE_STORE_FILE"] ?: "my-release-key.keystore")
+            storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD") ?: project.properties["RELEASE_STORE_PASSWORD"] as String?
+            keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS") ?: project.properties["RELEASE_KEY_ALIAS"] as String? ?: "luteapp"
+            keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD") ?: project.properties["RELEASE_KEY_PASSWORD"] as String?
         }
     }
 

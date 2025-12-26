@@ -19,3 +19,10 @@ lastthread.md
 .directory
 .project
 .env
+
+# Keystore files (should never be committed)
+*.keystore
+*.jks
+
+# Gradle properties with sensitive data
+gradle.properties.local
