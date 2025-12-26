@@ -214,6 +214,11 @@ class AppSettingsFragment : Fragment() {
         // Set up the show AI instructions button
         showAiInstructionsButton.setOnClickListener { showAiInstructions() }
 
+        // Set up the AI model name click listener to fetch available models
+        aiModelEditText.setOnClickListener {
+            fetchAvailableModels()
+        }
+
         // Load AI settings
         loadAiSettings()
 
@@ -2141,6 +2146,123 @@ class AppSettingsFragment : Fragment() {
             builder.setPositiveButton("OK", null)
         }
 
+        builder.show()
+    }
+
+    private fun fetchAvailableModels() {
+        val endpoint = aiEndpointEditText.text.toString().trim()
+
+        if (endpoint.isEmpty()) {
+            android.widget.Toast.makeText(
+                requireContext(),
+                "Please enter the OpenAI endpoint URL first",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        // Convert /v1/chat/completions to /v1/models
+        val modelsEndpoint = endpoint.replace("/v1/chat/completions", "/v1/models")
+
+        android.util.Log.d("AppSettingsFragment", "Fetching models from: $modelsEndpoint")
+
+        Thread {
+            try {
+                val url = java.net.URL(modelsEndpoint)
+                val connection = url.openConnection() as java.net.HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.connectTimeout = 10000
+                connection.readTimeout = 30000
+
+                val aiApiKey = aiApiKeyEditText.text.toString().trim()
+                if (aiApiKey.isNotEmpty()) {
+                    connection.setRequestProperty("Authorization", "Bearer $aiApiKey")
+                }
+
+                val responseCode = connection.responseCode
+                android.util.Log.d("AppSettingsFragment", "Models response code: $responseCode")
+
+                if (responseCode == 200) {
+                    val inputStream = connection.inputStream
+                    val response = inputStream.bufferedReader().use { it.readText() }
+                    inputStream.close()
+
+                    android.util.Log.d("AppSettingsFragment", "Models response: $response")
+
+                    val models = parseModelsResponse(response)
+                    activity?.runOnUiThread {
+                        if (models.isNotEmpty()) {
+                            showModelSelectionDialog(models)
+                        } else {
+                            android.widget.Toast.makeText(
+                                requireContext(),
+                                "No models found",
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } else {
+                    val errorStream = connection.errorStream
+                    val errorResponse = errorStream?.bufferedReader()?.use { it.readText() } ?: "Unknown error"
+                    errorStream?.close()
+
+                    android.util.Log.e("AppSettingsFragment", "Models error response: $errorResponse")
+                    activity?.runOnUiThread {
+                        android.widget.Toast.makeText(
+                            requireContext(),
+                            "Failed to fetch models: HTTP $responseCode",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+
+                connection.disconnect()
+            } catch (e: Exception) {
+                android.util.Log.e("AppSettingsFragment", "Error fetching models", e)
+                activity?.runOnUiThread {
+                    android.widget.Toast.makeText(
+                        requireContext(),
+                        "Error fetching models: ${e.message}",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }.start()
+    }
+
+    private fun parseModelsResponse(response: String): List<String> {
+        val models = mutableListOf<String>()
+        try {
+            val jsonObject = org.json.JSONObject(response)
+            val data = jsonObject.optJSONArray("data")
+
+            if (data != null && data.length() > 0) {
+                for (i in 0 until data.length()) {
+                    val model = data.getJSONObject(i)
+                    val modelId = model.optString("id", "")
+                    if (modelId.isNotEmpty()) {
+                        models.add(modelId)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AppSettingsFragment", "Error parsing models response", e)
+        }
+        return models
+    }
+
+    private fun showModelSelectionDialog(modelOptions: List<String>) {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        builder.setTitle("Select AI Model")
+
+        val modelArray = modelOptions.sorted().toTypedArray()
+
+        builder.setItems(modelArray) { _, which ->
+            val selectedModel = modelArray[which]
+            aiModelEditText.setText(selectedModel)
+        }
+
+        builder.setNegativeButton("Cancel", null)
         builder.show()
     }
 
