@@ -385,7 +385,18 @@ class TTSManager(private val context: Context) {
             if (tts == null) return emptyList()
 
             val voices = mutableListOf<String>()
-            tts?.voices?.forEach { voice -> voices.add(voice.name) }
+            try {
+                tts?.voices?.forEach { voice ->
+                    val displayName = if (voice.locale != null) {
+                        "${voice.name} (${voice.locale.displayLanguage})"
+                    } else {
+                        voice.name
+                    }
+                    voices.add(displayName)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("TTSManager", "Error getting voices: ${e.message}")
+            }
             return voices
         }
     }
@@ -423,6 +434,10 @@ class TTSManager(private val context: Context) {
         }
     }
 
+    fun isInitialized(): Boolean {
+        return isInitialized
+    }
+
     // Method to apply all settings to the current TTS instance
     fun applyCurrentSettings() {
         if (!isInitialized) return
@@ -438,6 +453,44 @@ class TTSManager(private val context: Context) {
             }
         }
         // For Kokoro TTS, settings are applied at synthesis time
+    }
+
+    fun getSelectedTTSEngine(): String {
+        return selectedTTSEngine
+    }
+
+    fun setSelectedTTSEngine(engine: String) {
+        if (selectedTTSEngine != engine) {
+            selectedTTSEngine = engine
+            // When engine changes, we need to make sure to load the appropriate settings
+            val sharedPref = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+            loadSettingsForEngine(engine, sharedPref)
+        }
+    }
+
+    fun switchToEngine(engine: String, callback: (Boolean) -> Unit) {
+        if (selectedTTSEngine != engine) {
+            // If switching engines, we need to properly initialize the new engine
+            if (isInitialized) {
+                // Shutdown the current engine first
+                shutdown()
+            }
+
+            // Set the new engine
+            selectedTTSEngine = engine
+
+            // Load the appropriate settings for the new engine
+            val sharedPref = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+            loadSettingsForEngine(engine, sharedPref)
+
+            // Initialize the new engine
+            initializeTTS { success ->
+                callback(success)
+            }
+        } else {
+            // Already on the correct engine, just return success
+            callback(isInitialized)
+        }
     }
 
     private fun saveSettingToPreferences() {

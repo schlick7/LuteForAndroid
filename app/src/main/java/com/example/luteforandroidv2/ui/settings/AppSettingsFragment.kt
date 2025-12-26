@@ -653,6 +653,23 @@ class AppSettingsFragment : Fragment() {
             )
         }
 
+        // Add EditText with weight to take remaining space
+        val editTextLayoutParams = LinearLayout.LayoutParams(
+            0,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            1f // Weight to take remaining space
+        )
+        voiceEditText.layoutParams = editTextLayoutParams
+
+        // Add button with wrap content
+        val buttonLayoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            setMargins(16, 0, 0, 0) // Add left margin for spacing
+        }
+        showVoicesButton.layoutParams = buttonLayoutParams
+
         voiceSelectionLayout.addView(voiceEditText)
         voiceSelectionLayout.addView(showVoicesButton)
         layout.addView(voiceSelectionLabel)
@@ -1870,6 +1887,10 @@ class AppSettingsFragment : Fragment() {
         // Load TTS voice from SharedPreferences into the text field
         val selectedTtsVoice = sharedPref.getString(voiceKey, "")
         voiceEditText.setText(selectedTtsVoice)
+
+        // Update the TTSManager to use the correct engine
+        val ttsManager = TTSManager.getInstance(requireContext())
+        ttsManager.setSelectedTTSEngine(engine)
     }
 
     private fun setupTtsRateSeekBar() {
@@ -1956,31 +1977,33 @@ class AppSettingsFragment : Fragment() {
         voiceEditText.setText(selectedTtsVoice)
     }
 
-    private fun getAvailableTtsVoices(): List<String> {
-        // Create a dummy TTSManager to get available voices
-        // or get them from the existing instance
-        try {
-            val ttsManager = TTSManager.getInstance(requireContext())
-            val voices = ttsManager.getAvailableVoices()
-            return if (voices.isNotEmpty()) {
-                // Sort voices alphabetically
-                voices.sorted()
-            } else {
-                // Return some default voices as fallback
-                listOf("Default Voice")
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("AppSettingsFragment", "Error getting available TTS voices", e)
-            return listOf("Default Voice")
-        }
-    }
-
     private fun showAvailableVoicesDialog() {
         // Get available voices based on the selected TTS engine
         val selectedTtsEngine = ttsEngineSpinner.selectedItem?.toString() ?: "Android TTS"
-        val voiceOptions = if (selectedTtsEngine == "Kokoro TTS") {
+
+        // Initialize TTSManager if needed before retrieving voices
+        val ttsManager = TTSManager.getInstance(requireContext())
+        if (!ttsManager.isInitialized()) {
+            ttsManager.initializeTTS { success ->
+                if (!success) {
+                    android.util.Log.e("AppSettingsFragment", "Failed to initialize TTS for voice retrieval")
+                    // Continue with the dialog using defaults if initialization failed
+                    showVoicesDialogWithEngine(selectedTtsEngine)
+                } else {
+                    // TTSManager initialized successfully, proceed with dialog
+                    showVoicesDialogWithEngine(selectedTtsEngine)
+                }
+            }
+        } else {
+            // TTSManager already initialized, proceed with dialog
+            showVoicesDialogWithEngine(selectedTtsEngine)
+        }
+    }
+
+    private fun showVoicesDialogWithEngine(selectedTtsEngine: String) {
+        if (selectedTtsEngine == "Kokoro TTS") {
             // For Kokoro TTS, provide all available voice names with language and grade info
-            listOf(
+            val voiceOptions = listOf(
                 // American English (F: 11, M: 9)
                 "af_heart (English A)",
                 "af_alloy (English C)",
@@ -2049,11 +2072,35 @@ class AppSettingsFragment : Fragment() {
                 "pm_alex (Portuguese)",
                 "pm_santa (Portuguese)"
             )
-        } else {
-            // For Android TTS, get available voices from the system
-            getAvailableTtsVoices()
-        }
 
+            // Show the dialog with Kokoro voices
+            showVoiceSelectionDialog(voiceOptions)
+        } else {
+            // For Android TTS, get actual system voices
+            val ttsManager = TTSManager.getInstance(requireContext())
+
+            // Check if we need to switch to Android TTS engine
+            // This will properly initialize the TextToSpeech engine if needed
+            ttsManager.switchToEngine("Android TTS") { success ->
+                if (success) {
+                    // Add a small delay to allow the TTS engine to load voices
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        val androidVoices = ttsManager.getAvailableVoices()
+                        val voiceOptions = if (androidVoices.isNotEmpty()) {
+                            androidVoices.sorted()
+                        } else {
+                            listOf("No system voices available")
+                        }
+                        showVoiceSelectionDialog(voiceOptions)
+                    }, 300)
+                } else {
+                    showVoiceSelectionDialog(listOf("Failed to initialize Android TTS - no voices available"))
+                }
+            }
+        }
+    }
+
+    private fun showVoiceSelectionDialog(voiceOptions: List<String>) {
         // Create a dialog with the voice options
         val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
         builder.setTitle("Select Voice(s)")
@@ -2074,16 +2121,24 @@ class AppSettingsFragment : Fragment() {
         }
 
         builder.setNegativeButton("Cancel", null)
-        builder.setPositiveButton("Voice Mixing Help") { _, _ ->
-            // Show help message about voice mixing
-            val helpMessage = "Voice mixing:\n- Use single voice: af_bella\n" +
-                    "- Mix voices: af_bella+af_heart\n" +
-                    "- Weighted mix: af_bella(2)+af_heart(1) for 67%/33% mix"
-            androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("Voice Mixing Help")
-                .setMessage(helpMessage)
-                .setPositiveButton("OK", null)
-                .show()
+
+        // Only show "Voice Mixing Help" for Kokoro TTS, not for Android TTS
+        val selectedTtsEngine = ttsEngineSpinner.selectedItem?.toString() ?: "Android TTS"
+        if (selectedTtsEngine == "Kokoro TTS") {
+            builder.setPositiveButton("Voice Mixing Help") { _, _ ->
+                // Show help message about voice mixing
+                val helpMessage = "Voice mixing:\n- Use single voice: af_bella\n" +
+                        "- Mix voices: af_bella+af_heart\n" +
+                        "- Weighted mix: af_bella(2)+af_heart(1) for 67%/33% mix"
+                androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Voice Mixing Help")
+                    .setMessage(helpMessage)
+                    .setPositiveButton("OK", null)
+                    .show()
+            }
+        } else {
+            // For Android TTS, just use an OK button
+            builder.setPositiveButton("OK", null)
         }
 
         builder.show()
