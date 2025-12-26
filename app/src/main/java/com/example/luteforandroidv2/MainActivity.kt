@@ -308,8 +308,7 @@ class MainActivity :
                     R.id.nav_native_read,
                     R.id.nav_terms,
                     R.id.nav_settings,
-                    R.id.nav_stats,
-                    R.id.nav_about
+                    R.id.nav_stats
                 ),
                 drawerLayout
             )
@@ -328,6 +327,24 @@ class MainActivity :
                     } else {
                         navController.navigate(R.id.nav_books)
                     }
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+
+                R.id.nav_versions -> {
+                    // Open GitHub repository in browser
+                    val intent = android.content.Intent(
+                        android.content.Intent.ACTION_VIEW,
+                        android.net.Uri.parse("https://github.com/schlick7/LuteForAndroid")
+                    )
+                    startActivity(intent)
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+
+                R.id.nav_lute_version -> {
+                    // Navigate to AboutFragment (loads server about page)
+                    navController.navigate(R.id.nav_about)
                     binding.drawerLayout.closeDrawers()
                     true
                 }
@@ -611,8 +628,6 @@ class MainActivity :
         val versionName = getString(R.string.app_version)
         val versionsItem: MenuItem = navView.menu.findItem(R.id.nav_versions)
         versionsItem.title = versionName
-        // Disable click for version items
-        versionsItem.isEnabled = false
 
         // Update Lute version
         updateLuteVersionInfo(navView)
