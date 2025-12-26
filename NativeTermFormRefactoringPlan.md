@@ -1,59 +1,70 @@
-# NativeTermFormFragment Refactoring Plan
+# NativeTermFormFragment Refactoring Plan (Simplified)
 
-## Current State Analysis
+## Current State
 
 **File**: `NativeTermFormFragment.kt`
 **Lines**: 3,347 lines
-**Complexity**: Very High - Multiple responsibilities mixed together
-
-### Current Responsibilities
-1. UI Setup & Dialog Management (lines 30-143, 116-362)
-2. Parent Term Management (lines 38-39, 938-895, 1919-2348, 2632-2679)
-3. Status Button Management (lines 46-58, 1041-1139)
-4. Term Saving/Loading (lines 1151-1551, 2021-2475)
-5. Autocomplete & Search (lines 383-827, 667-893)
-6. Translation Cache Sync (lines 51-76, 151-176, 2733-2780)
-7. Linking Management (lines 54, 232-234, 2933-3049, 2964-2982)
-8. AI Integration (lines 3016-3199)
-9. Popup Management (lines 2486-2630)
-10. Data Parsing (lines 2477-2484, 350-517, 709-744, 1709-1745, 2350-2384, 3287-3332)
-11. Validation (lines 1249-1252)
-12. Language Fetching (lines 3201-3332)
+**Complexity**: High - UI, business logic, and network code mixed together
 
 ---
 
-## Target Architecture
+## Target Architecture (4 Classes)
 
-### 1. NativeTermFormFragment (~500 lines)
-**Role**: UI-only presentation layer
+```
+NativeTermFormFragment (UI)
+        ↓
+NativeTermFormViewModel (Business Logic)
+        ↓
+TermFormRepository (Data Layer)
+        ↓
+TermFormUtils (Pure Functions)
+```
+
+---
+
+## Class Breakdown
+
+### 1. NativeTermFormFragment (~1,200 lines)
+
+**Role**: UI presentation layer
 
 **Responsibilities**:
 - View lifecycle management
 - View binding setup and cleanup
 - UI event handling (button clicks, text changes)
-- Observing ViewModel state and updating UI
-- Navigation and dialog dismissal
+- Observing ViewModel state
+- Displaying popups and dialogs
+- Navigation and dismissal
 
-**Key Methods**:
-```kotlin
-- onCreateDialog()
-- onCreateView()
-- onViewCreated()
-- onDestroyView()
-- observeViewModel()
-- setupUI()
-- handleUserActions()
-```
+**What to Keep** (move from original):
+- Dialog creation (lines 101-114)
+- View binding (lines 32-34)
+- UI setup methods (simplified)
+- Button click listeners
+- Text watchers
+- Popup display logic
+- Status button creation/update
 
-### 2. NativeTermFormViewModel (~800 lines)
+**What to Remove**:
+- All network calls
+- All data parsing
+- All business logic
+- State management
+
+---
+
+### 2. NativeTermFormViewModel (~1,000 lines)
+
 **Role**: Business logic coordinator
 
 **Responsibilities**:
-- State management (selected status, isLinked, parent list)
-- Coordinating data fetching and saving
-- Exposing state via LiveData/StateFlow
-- Handling user actions through exposed methods
-- Managing translation cache coordination
+- State management with StateFlow/LiveData
+- Coordinating user actions
+- Managing parent term list and data map
+- Managing linking state
+- Validating form state
+- Calling repository methods
+- Exposing state to UI
 
 **State**:
 ```kotlin
@@ -64,491 +75,513 @@ data class TermFormState(
     val status: Int = 1,
     val parents: List<String> = emptyList(),
     val isLinked: Boolean = false,
+    val isParentTermForm: Boolean = false,
+    val parentTermDataMap: Map<String, TermFormData> = emptyMap(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val parentTermDataMap: Map<String, TermFormData> = emptyMap(),
     val isAiEnabled: Boolean = false
 )
 ```
 
-**Exposed Methods**:
-```kotlin
-- updateTranslation(text: String)
-- updateStatus(status: Int)
-- toggleLinking()
-- addParent(parentText: String)
-- removeParent(parentText: String)
-- saveTerm()
-- fetchParentData(parent: String)
-- sendToAi(term: String, sentence: String)
-```
+**Methods** (move from Fragment):
+- `updateTranslation(text: String)`
+- `updateStatus(status: Int)`
+- `toggleLinking()`
+- `addParent(parentText: String)`
+- `removeParent(parentText: String)`
+- `saveTerm()`
+- `fetchParentData(parent: String)`
+- `updateStatusBasedOnParent()`
+- `sendToAi(term: String, sentence: String)`
+- `getLanguageName(languageId: Int)`
+- `validateForm()`
 
-### 3. TermFormValidator (~200 lines)
-**Role**: Form validation logic
+---
 
-**Responsibilities**:
-- Validating term text modifications
-- Checking parent term existence
-- Validating form state before save
+### 3. TermFormRepository (~600 lines)
 
-**Methods**:
-```kotlin
-- validateTermTextModification(original: String, modified: String): ValidationResult
-- validateParents(parents: List<String>): ValidationResult
-- validateFormState(state: TermFormState): ValidationResult
-- isTermTextValidModification(original: String, modified: String): Boolean
-```
-
-**Validation Result**:
-```kotlin
-sealed class ValidationResult {
-    object Valid : ValidationResult()
-    data class Invalid(val errors: List<String>) : ValidationResult()
-}
-```
-
-### 4. ParentTermManager (~400 lines)
-**Role**: Parent term lifecycle management
+**Role**: All data operations
 
 **Responsibilities**:
-- Managing parent term data map
-- Fetching parent term data from server
-- Creating parent term buttons
-- Handling parent term clicks and double-taps
-- Managing parent term status colors
+- Network calls to Lute server
+- API requests (save, search, fetch)
+- HTML parsing and data extraction
+- AI API calls
+- Caching responses
+- Error handling for network operations
 
-**Methods**:
+**Methods** (extract from Fragment):
+
+**Term Operations**:
 ```kotlin
-- getParentTermData(parent: String): TermFormData?
-- setParentTermData(parent: String, data: TermFormData)
-- fetchParentData(parents: List<String>, callback: (Result<TermFormData>) -> Unit)
-- createParentButton(parent: String, status: Int): View
-- updateParentButtonColor(parent: String, status: Int)
-- handleParentClick(parent: String, isDoubleClick: Boolean)
-- searchParentTerm(searchTerm: String, languageId: Int): List<String>
-- checkParentExists(parent: String, languageId: Int): Boolean
+suspend fun saveTerm(termData: TermFormData): Result<Unit>
+suspend fun fetchTermDataById(termId: Int): Result<TermFormData>
+suspend fun searchTerms(query: String, languageId: Int): Result<List<String>>
 ```
 
-### 5. TermSearchManager (~300 lines)
-**Role**: Term search and autocomplete
+**Parent Term Operations**:
+```kotlin
+suspend fun fetchParentTermData(parent: String, languageId: Int): Result<TermFormData>
+suspend fun searchParentTerms(query: String, languageId: Int): Result<List<String>>
+suspend fun checkParentExists(parent: String, languageId: Int): Result<Boolean>
+suspend fun createParentTerm(parent: String, languageId: Int): Result<Unit>
+```
+
+**Server Operations**:
+```kotlin
+suspend fun testServerConnection(serverUrl: String): Boolean
+suspend fun getLanguageInfo(languageId: Int): Result<LanguageInfo>
+```
+
+**AI Operations**:
+```kotlin
+suspend fun requestAiTranslation(term: String, sentence: String, language: String): Result<String>
+```
+
+**Data Parsing** (delegate to Utils):
+```kotlin
+fun parseTermDataFromHtml(html: String, termId: Int, parent: String): TermFormData
+fun parseLanguageNameFromHtml(html: String): String
+```
+
+---
+
+### 4. TermFormUtils (~300 lines)
+
+**Role**: Pure utility functions
 
 **Responsibilities**:
-- Performing term searches
-- Performing parent term searches
-- Debouncing search requests
-- Caching search results
+- Validation functions
+- Color utilities
+- Status mappings
+- HTML parsing helpers
+- String utilities
 
-**Methods**:
+**Methods** (extract from Fragment):
+
+**Validation**:
 ```kotlin
-- searchTerms(query: String, languageId: Int): Flow<List<String>>
-- searchParentTerms(query: String, languageId: Int): Flow<List<String>>
-- cancelActiveSearches()
-- clearCache()
+fun isTermTextValidModification(original: String, modified: String): Boolean
+fun validateParents(parents: List<String>): List<String>
 ```
 
-### 6. TermSaveManager (~400 lines)
-**Role**: Term persistence to server
-
-**Responsibilities**:
-- Saving new terms to server
-- Updating existing terms
-- Handling parent term linking
-- Error handling and retry logic
-- Testing server connectivity before save
-
-**Methods**:
+**Colors & Styles**:
 ```kotlin
-- saveTerm(termData: TermFormData): Flow<SaveResult>
-- testServerConnection(serverUrl: String): Flow<Boolean>
-- buildSaveRequestBody(termData: TermFormData): String
-- handleSaveResponse(responseCode: Int, response: String): SaveResult
+fun getStatusColors(): Map<Int, String>
+fun getContrastColor(color: Int): Int
+fun getStatusInfo(statusId: Int): StatusInfo
 ```
 
-**Save Result**:
+**HTML Parsing**:
 ```kotlin
-sealed class SaveResult {
-    object Success : SaveResult()
-    data class Error(val message: String, val isLinkingError: Boolean = false) : SaveResult()
-    object ServerUnreachable : SaveResult()
-}
+fun parseJsonArray(content: String): List<String>
+fun parseTermIdFromSearchResults(content: String, parent: String): Int?
 ```
 
-### 7. AiTranslationManager (~250 lines)
-**Role**: AI integration for translations
-
-**Responsibilities**:
-- Sending terms to AI endpoint
-- Parsing AI responses
-- Managing AI configuration
-- Error handling for AI requests
-
-**Methods**:
+**Data Classes**:
 ```kotlin
-- requestAiTranslation(term: String, sentence: String, language: String): Flow<AiResult>
-- parseOpenAiResponse(response: String): String
-- buildAiPrompt(term: String, sentence: String, language: String, template: String): String
-- isConfigured(): Boolean
-```
-
-**AI Result**:
-```kotlin
-sealed class AiResult {
-    data class Success(val translation: String) : AiResult()
-    data class Error(val message: String) : AiResult()
-    object NotConfigured : AiResult()
-}
-```
-
-### 8. TranslationPopupManager (~200 lines)
-**Role**: Translation popup display
-
-**Responsibilities**:
-- Creating and showing translation popups
-- Managing popup lifecycle
-- Handling popup positioning and auto-dismissal
-
-**Methods**:
-```kotlin
-- showPopup(anchorView: View, title: String, translation: String)
-- dismissPopup()
-- calculatePopupOffset(anchorView: View, popupSize: Point): Point
-```
-
-### 9. LanguageDataFetcher (~150 lines)
-**Role**: Language information retrieval
-
-**Responsibilities**:
-- Fetching language names by ID
-- Caching language information
-- Parsing language data from HTML
-
-**Methods**:
-```kotlin
-- getLanguageName(languageId: Int): Flow<String>
-- fetchLanguageInfo(languageId: Int): Flow<LanguageInfo>
-- parseLanguageNameFromHtml(html: String): String
+data class StatusInfo(val id: Int, val label: String, val color: String)
+data class LanguageInfo(val id: Int, val name: String)
 ```
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Data Models and Interfaces (Week 1)
-**Goal**: Create data classes and interfaces
+### Phase 1: Create TermFormUtils (Week 1)
 
 **Tasks**:
-1. ✅ Verify existing data classes (TermData.kt, TermFormData.kt)
-2. Create `TermFormState.kt` data class
-3. Create `ValidationResult.kt` sealed class
-4. Create `SaveResult.kt` sealed class
-5. Create `AiResult.kt` sealed class
-6. Create `ParentTermManager` interface
-7. Create `TermSaveManager` interface
-8. Create `TermSearchManager` interface
+1. Create `TermFormUtils.kt` in `ui/nativeread/Term/`
+2. Extract and move utility functions:
+   - `isTermTextValidModification()` (line 1249)
+   - `getContrastColor()` (line 1141)
+   - Status color maps (lines 953-962, 2649-2658)
+   - `StatusInfo` data class (line 2335)
+   - JSON parsing helpers (lines 501-517, 1709-1745, 2350-2384)
 
-**Files to Create**:
-- `ui/nativeread/Term/TermFormState.kt`
-- `ui/nativeread/Term/ValidationResult.kt`
-- `ui/nativeread/Term/SaveResult.kt`
-- `ui/nativeread/Term/AiResult.kt`
-- `ui/nativeread/Term/ParentTermManager.kt`
-- `ui/nativeread/Term/TermSaveManager.kt`
-- `ui/nativeread/Term/TermSearchManager.kt`
+3. Update Fragment to use Utils
+4. Run tests to ensure no breakage
 
-**Estimated Effort**: 3 days
+**Files**:
+- `ui/nativeread/Term/TermFormUtils.kt`
 
-### Phase 2: Extract Validator and Save Manager (Week 2)
-**Goal**: Extract validation and save logic
+**Estimated Time**: 2 days
+
+---
+
+### Phase 2: Create TermFormRepository (Week 2-3)
 
 **Tasks**:
-1. Create `TermFormValidator.kt`
-   - Move `isTermTextValidModification()` from lines 249-252
-   - Add comprehensive validation methods
+1. Create `TermFormRepository.kt` in `ui/nativeread/Term/`
+2. Extract and move all network operations:
+   - `saveTermToServer()` (lines 1255-1551)
+   - `testServerAndSaveTerm()` (lines 1557-1586)
+   - `performTermSearch()` (lines 430-499)
+   - `performParentTermSearch()` (lines 720-789)
+   - `fetchTermDataById()` (lines 2386-2475)
+   - `searchAndFetchParentTermData()` (lines 1979-2348)
+   - `fetchParentTermData()` (lines 1897-1916)
+   - `checkAndAddParentTerm()` (lines 1605-1706)
+   - `createNewTerm()` (lines 1767-1875)
+   - `sendTermToAi()` (lines 3017-3154)
+   - `getLanguageNameById()` (lines 3201-3285)
 
-2. Create `TermSaveManager.kt`
-   - Move `saveTermToServer()` from lines 2554-2550
-   - Move `testServerAndSaveTerm()` from lines 1557-1586
-   - Add Flow-based async operations
+3. Convert to suspend functions and use Result<T>
+4. Add proper error handling
+5. Implement simple caching (in-memory)
 
-3. Update Fragment to use new manager classes
-   - Replace direct save calls with ViewModel -> SaveManager
+**Files**:
+- `ui/nativeread/Term/TermFormRepository.kt`
 
-**Files to Create**:
-- `ui/nativeread/Term/TermFormValidator.kt`
-- `ui/nativeread/Term/TermSaveManager.kt`
+**Estimated Time**: 7 days
 
-**Estimated Effort**: 4 days
+---
 
-### Phase 3: Extract Parent Term Manager (Week 3)
-**Goal**: Extract parent term handling
-
-**Tasks**:
-1. Create `ParentTermManager.kt`
-   - Move `parentTermDataMap` management
-   - Move `fetchParentTermData()` from lines 1897-1916
-   - Move `searchAndFetchParentTermData()` from lines 1979-2348
-   - Move `parseTermIdFromSearchResults()` from lines 2350-2384
-   - Move `updateParentButtonColor()` from lines 2632-2679
-   - Move `handleParentClick()` from lines 2783-2800
-   - Move `handleParentDoubleTap()` from lines 2803-2931
-
-2. Create adapter for parent suggestions if not exists
-   - Review `ParentTermSuggestionsAdapter`
-
-**Files to Create**:
-- `ui/nativeread/Term/ParentTermManager.kt`
-
-**Estimated Effort**: 5 days
-
-### Phase 4: Extract Search Manager (Week 4)
-**Goal**: Extract search and autocomplete logic
+### Phase 3: Create NativeTermFormViewModel (Week 4-5)
 
 **Tasks**:
-1. Create `TermSearchManager.kt`
-   - Move `performTermSearch()` from lines 430-499
-   - Move `performParentTermSearch()` from lines 720-789
-   - Move `parseTermSearchResults()` from lines 501-517
-   - Move `showTermSuggestions()` from lines 519-665
-   - Move `showParentTermSuggestions()` from lines 791-827
-   - Implement debouncing with Flow
+1. Create `NativeTermFormViewModel.kt` in `ui/nativeread/Term/`
+2. Define `TermFormState` data class
+3. Move state management from Fragment:
+   - `termFormData`, `storedTermData`, `parentTermDataMap`
+   - `selectedStatus`, `isLinked`
+   - Parent buttons list, status buttons list
 
-2. Remove redundant popup creation code
-   - Consolidate popup logic into `TranslationPopupManager`
+4. Create StateFlow for each state field
+5. Expose methods for user actions:
+   - `updateTranslation()`, `updateStatus()`, `toggleLinking()`
+   - `addParent()`, `removeParent()`
+   - `saveTerm()`, `fetchParentData()`
+   - `sendToAi()`, `getLanguageName()`
 
-**Files to Create**:
-- `ui/nativeread/Term/TermSearchManager.kt`
+6. Integrate with Repository
+7. Implement validation logic
 
-**Estimated Effort**: 4 days
-
-### Phase 5: Create ViewModel (Week 5-6)
-**Goal**: Implement MVVM pattern with ViewModel
-
-**Tasks**:
-1. Create `NativeTermFormViewModel.kt`
-   - Implement state management with StateFlow
-   - Expose methods for user actions
-   - Coordinate between all managers
-   - Handle business logic
-
-2. Update Fragment to observe ViewModel
-   - Replace direct state variables with StateFlow
-   - Add observers for state changes
-   - Update UI based on state
-
-**Files to Create**:
+**Files**:
 - `ui/nativeread/Term/NativeTermFormViewModel.kt`
+- `ui/nativeread/Term/TermFormState.kt`
 
-**Estimated Effort**: 7 days
+**Estimated Time**: 7 days
 
-### Phase 6: Extract AI Manager (Week 6)
-**Goal**: Extract AI integration
+---
 
-**Tasks**:
-1. Create `AiTranslationManager.kt`
-   - Move `sendTermToAi()` from lines 3017-3154
-   - Move `handleAiResponse()` from lines 3157-3180
-   - Move `parseOpenAiResponse()` from lines 3183-3199
-   - Implement Flow-based operations
-
-2. Update ViewModel to use AI Manager
-
-**Files to Create**:
-- `ui/nativeread/Term/AiTranslationManager.kt`
-
-**Estimated Effort**: 3 days
-
-### Phase 7: Extract Popup and Language Managers (Week 7)
-**Goal**: Extract UI-specific managers
+### Phase 4: Refactor Fragment (Week 6-7)
 
 **Tasks**:
-1. Create `TranslationPopupManager.kt`
-   - Move `showTranslationPopup()` from lines 2486-2630
-   - Extract popup positioning logic
-   - Handle auto-dismissal
+1. Add ViewModel to Fragment
+2. Setup observers for StateFlow
+3. Remove all state variables (moved to ViewModel)
+4. Remove all network calls (moved to Repository)
+5. Remove all business logic (moved to ViewModel)
+6. Keep only:
+   - View binding
+   - UI setup
+   - Click listeners (call ViewModel methods)
+   - Popup display
+   - Lifecycle management
 
-2. Create `LanguageDataFetcher.kt`
-   - Move `getLanguageNameById()` from lines 3201-3285
-   - Move `parseLanguageNameFromHtml()` from lines 3287-3332
-   - Implement caching
+7. Simplify methods:
+   - `setupUI()` - just setup views, no logic
+   - Button listeners - call ViewModel methods
+   - Update UI based on observed state
 
-**Files to Create**:
-- `ui/nativeread/Term/TranslationPopupManager.kt`
-- `ui/nativeread/Term/LanguageDataFetcher.kt`
+8. Test all user flows
 
-**Estimated Effort**: 4 days
+**Estimated Time**: 8 days
 
-### Phase 8: Refactor Fragment (Week 8-9)
-**Goal**: Finalize Fragment as UI-only layer
+---
 
-**Tasks**:
-1. Clean up Fragment class
-   - Remove business logic (moved to ViewModel)
-   - Remove state variables (moved to ViewModel)
-   - Keep only UI setup and event handling
-   - Remove all network calls
-   - Remove all parsing logic
-
-2. Update Fragment structure
-   ```kotlin
-   class NativeTermFormFragment : DialogFragment() {
-       // Dependencies
-       private lateinit var viewModel: NativeTermFormViewModel
-       private lateinit var parentTermManager: ParentTermManager
-       private lateinit var popupManager: TranslationPopupManager
-
-       // Lifecycle
-       override fun onCreateView(...)
-       override fun onViewCreated(...)
-       override fun onDestroyView()
-
-       // UI Setup
-       private fun setupUI()
-       private fun setupObservers()
-       private fun setupListeners()
-
-       // Event Handlers
-       private fun onSaveClicked()
-       private fun onCancelClicked()
-       private fun onParentClicked(parent: String)
-       private fun onStatusChanged(status: Int)
-       private fun onLinkingToggled()
-
-       // UI Updates
-       private fun updateUiState(state: TermFormState)
-       private fun showError(message: String)
-       private fun showLoading(show: Boolean)
-   }
-   ```
-
-3. Verify all tests pass
-
-**Estimated Effort**: 8 days
-
-### Phase 9: Testing and Documentation (Week 10)
-**Goal**: Ensure quality and maintainability
+### Phase 5: Testing & Cleanup (Week 8)
 
 **Tasks**:
-1. Write unit tests for:
-   - `TermFormValidator`
-   - `TermSaveManager`
-   - `ParentTermManager`
-   - `TermSearchManager`
-   - `AiTranslationManager`
+1. Write unit tests for Repository:
+   - Test network operations with mock server
+   - Test error handling
+   - Test caching
 
-2. Write integration tests for:
-   - ViewModel with mock managers
-   - Fragment with mock ViewModel
+2. Write unit tests for ViewModel:
+   - Test state changes
+   - Test business logic
+   - Test error handling
 
-3. Add KDoc documentation to all public APIs
+3. Write unit tests for Utils:
+   - Test validation functions
+   - Test parsing functions
 
-4. Create architectural decision record (ADR)
+4. Integration tests:
+   - Test Fragment with mock ViewModel
+   - Test end-to-end flows
 
-**Files to Create**:
-- `test/java/.../TermFormValidatorTest.kt`
-- `test/java/.../TermSaveManagerTest.kt`
-- `test/java/.../ParentTermManagerTest.kt`
-- `test/java/.../TermSearchManagerTest.kt`
-- `test/java/.../AiTranslationManagerTest.kt`
-- `test/java/.../NativeTermFormViewModelTest.kt`
-- `docs/ADR-NativeTermFormRefactoring.md`
+5. Clean up:
+   - Remove dead code
+   - Add KDoc comments
+   - Format code
 
-**Estimated Effort**: 7 days
+**Files**:
+- `test/.../TermFormRepositoryTest.kt`
+- `test/.../NativeTermFormViewModelTest.kt`
+- `test/.../TermFormUtilsTest.kt`
+
+**Estimated Time**: 7 days
+
+---
+
+## Code Organization
+
+### File Structure
+```
+ui/nativeread/Term/
+├── NativeTermFormFragment.kt          (1,200 lines - UI)
+├── NativeTermFormViewModel.kt         (1,000 lines - Logic)
+├── TermFormRepository.kt              (600 lines - Data)
+├── TermFormUtils.kt                   (300 lines - Utilities)
+├── TermFormState.kt                  (50 lines - Data class)
+├── TermFormData.kt                    (existing)
+├── TermData.kt                       (existing)
+├── TermDataExtractor.kt              (existing)
+└── ParentTermSuggestionsAdapter.kt    (existing)
+```
 
 ---
 
 ## Dependency Graph
 
 ```
-NativeTermFormFragment (UI Layer)
-    ↓ depends on
-NativeTermFormViewModel (Business Logic)
-    ↓ coordinates
-├── TermFormValidator
-├── ParentTermManager
-├── TermSaveManager
-├── TermSearchManager
-├── AiTranslationManager
-├── TranslationPopupManager
-└── LanguageDataFetcher
-    ↓ use
-Data Classes (TermFormData, TermData, TermFormState, etc.)
+NativeTermFormFragment
+    ↓ observes
+NativeTermFormViewModel
+    ↓ calls
+TermFormRepository
+    ↓ uses
+TermFormUtils (parsing, validation)
 ```
 
 ---
 
-## Risk Assessment
+## Migration Steps (Detailed)
 
-### High Risk
-1. **Breaking Existing Functionality**
-   - Risk: Extracting logic may break parent-child term relationships
-   - Mitigation: Comprehensive testing in Phase 9
+### Phase 1: TermFormUtils
+```kotlin
+// Before (in Fragment)
+private fun isTermTextValidModification(original: String, modified: String): Boolean {
+    return original.equals(modified, ignoreCase = true)
+}
 
-2. **Circular Dependencies**
-   - Risk: Managers may depend on each other
-   - Mitigation: Clear interfaces and dependency injection
+// After
+// TermFormUtils.kt
+object TermFormUtils {
+    fun isTermTextValidModification(original: String, modified: String): Boolean {
+        return original.equals(modified, ignoreCase = true)
+    }
 
-### Medium Risk
-1. **State Synchronization**
-   - Risk: Multiple managers updating same state
-   - Mitigation: Single source of truth in ViewModel
+    fun getStatusColors(): Map<Int, String> = mapOf(
+        1 to "#b46b7a",
+        2 to "#BA8050",
+        // ...
+    )
 
-2. **Performance Regression**
-   - Risk: Multiple layers of abstraction
-   - Mitigation: Benchmark critical paths
+    fun getContrastColor(color: Int): Int {
+        val luminance = (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
+        return if (luminance > 0.5) Color.BLACK else Color.WHITE
+    }
+}
 
-### Low Risk
-1. **Code Duplication During Transition**
-   - Risk: Old and new code coexist
-   - Mitigation: Systematic phase-by-phase approach
+// In Fragment
+private fun isTermTextValidModification(original: String, modified: String): Boolean {
+    return TermFormUtils.isTermTextValidModification(original, modified)
+}
+```
+
+### Phase 2: TermFormRepository
+```kotlin
+// Before (in Fragment)
+private fun saveTermToServer(termData: TermFormData?, callback: (Boolean) -> Unit) {
+    Thread {
+        // Network logic...
+        activity?.runOnUiThread { callback(true) }
+    }.start()
+}
+
+// After
+// TermFormRepository.kt
+class TermFormRepository(
+    private val context: Context,
+    private val serverSettings: ServerSettingsManager
+) {
+    suspend fun saveTerm(termData: TermFormData): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val serverUrl = serverSettings.getServerUrl()
+            val connection = URL("$serverUrl/read/edit_term/${termData.termId}")
+                .openConnection() as HttpURLConnection
+            // ... network logic
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
+
+// In ViewModel
+fun saveTerm() = viewModelScope.launch {
+    _isLoading.value = true
+    repository.saveTerm(termFormData.value)
+        .onSuccess { _isLoading.value = false }
+        .onFailure { _error.value = it.message }
+}
+```
+
+### Phase 3: ViewModel
+```kotlin
+// Before (in Fragment)
+private var selectedStatus = 0
+private var isLinked = false
+
+// After
+// NativeTermFormViewModel.kt
+class NativeTermFormViewModel(
+    private val repository: TermFormRepository,
+    private val termFormData: TermFormData,
+    private val isParentTermForm: Boolean
+) : ViewModel() {
+    private val _state = MutableStateFlow(TermFormState(
+        termId = termFormData.termId,
+        termText = termFormData.termText,
+        translation = termFormData.translation,
+        status = termFormData.status,
+        parents = termFormData.parents,
+        isLinked = termFormData.isLinked
+    ))
+    val state: StateFlow<TermFormState> = _state.asStateFlow()
+
+    fun updateStatus(status: Int) {
+        _state.update { it.copy(status = status) }
+    }
+
+    fun toggleLinking() {
+        _state.update { it.copy(isLinked = !it.isLinked) }
+    }
+
+    fun saveTerm() {
+        viewModelScope.launch {
+            val currentState = _state.value
+            repository.saveTerm(currentState.toTermFormData())
+                .onSuccess { /* handle success */ }
+                .onFailure { /* handle error */ }
+        }
+    }
+}
+```
+
+### Phase 4: Fragment
+```kotlin
+// Before
+class NativeTermFormFragment : DialogFragment() {
+    private var selectedStatus = 0
+    private var isLinked = false
+    private var parentTermDataMap: MutableMap<String, TermFormData> = mutableMapOf()
+
+    private fun saveTerm() {
+        // Business logic...
+        saveTermToServer(termData) { success -> ... }
+    }
+}
+
+// After
+class NativeTermFormFragment : DialogFragment() {
+    private lateinit var viewModel: NativeTermFormViewModel
+    private var _binding: DialogNativeTermFormBinding? = null
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupViewModel()
+        setupObservers()
+        setupUI()
+    }
+
+    private fun setupObservers() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.state.collect { state ->
+                updateUI(state)
+            }
+        }
+    }
+
+    private fun setupUI() {
+        binding.saveButton.setOnClickListener {
+            viewModel.saveTerm()
+        }
+    }
+
+    private fun updateUI(state: TermFormState) {
+        binding.translationText.setText(state.translation)
+        updateStatusButtons(state.status)
+        updateParentButtons(state.parents)
+        updateLinkButton(state.isLinked)
+    }
+}
+```
 
 ---
 
 ## Success Metrics
 
-### Code Quality
-- Fragment reduced from 3,347 to ~500 lines (85% reduction)
-- Cyclomatic complexity reduced by 70%
-- Test coverage increased to >80%
-- No wildcard imports
-
-### Maintainability
-- Each class under 500 lines
-- Clear separation of concerns
-- No God classes
-- Proper MVVM implementation
-
-### Performance
-- No measurable performance regression
-- Memory usage reduced by eliminating duplicate state
-- Startup time unchanged or improved
+| Metric | Before | After | Improvement |
+|--------|--------|-------|-------------|
+| Fragment lines | 3,347 | 1,200 | 64% ↓ |
+| Total classes | 1 | 4 | Practical split |
+| Cyclomatic complexity | High | Medium | ~50% ↓ |
+| Testability | Low | High | High |
+| Network operations in UI | Yes | No | Clean |
+| Business logic in UI | Yes | No | Clean |
 
 ---
 
-## Migration Strategy
+## Benefits
 
-1. **Branch**: Create `refactor/native-term-form` branch
-2. **Commit Strategy**: One commit per completed phase
-3. **Testing**: Run existing tests after each phase
-4. **Code Review**: Required after each phase
-5. **Rollback**: Keep working branch at each phase
-
----
-
-## Resources Required
-
-- **Development Time**: 10 weeks (50 working days)
-- **Testing Time**: Included in development
-- **Code Review Time**: 2-3 hours per phase
-- **Total**: 50-60 working days
+1. **Manageable**: Each file has a clear, focused purpose
+2. **Testable**: Repository and ViewModel can be unit tested
+3. **Maintainable**: Changes localized to specific layer
+4. **Understandable**: Linear flow: UI → ViewModel → Repository
+5. **Not overkill**: Only 4 classes, not 9
+6. **Reusability**: Repository can be used by other screens
+7. **Type-safe**: Result<T> instead of callbacks
 
 ---
 
-## Post-Refactoring Benefits
+## Risk Mitigation
 
-1. **Easier Testing**: Each component can be tested independently
-2. **Better Maintainability**: Changes localized to specific components
-3. **Reusability**: Managers can be used by other components
-4. **Clearer Code**: Intent and responsibility are obvious
-5. **Easier Debugging**: Issues can be isolated to specific layers
-6. **Better Performance**: State synchronization optimized
-7. **Improved Security**: Input validation centralized
+| Risk | Mitigation |
+|------|------------|
+| Breaking existing functionality | Comprehensive testing in Phase 5 |
+| State synchronization issues | Single source of truth in ViewModel |
+| Performance regression | Benchmark before/after |
+| Learning curve | Clear documentation and examples |
+
+---
+
+## Timeline
+
+| Week | Phase | Duration |
+|------|-------|----------|
+| 1 | TermFormUtils | 2 days |
+| 2-3 | TermFormRepository | 7 days |
+| 4-5 | ViewModel | 7 days |
+| 6-7 | Fragment refactor | 8 days |
+| 8 | Testing & cleanup | 7 days |
+
+**Total**: 8 weeks (31 working days)
+
+---
+
+## Post-Refactoring
+
+### File Count
+- **New files**: 4 (Repository, ViewModel, State, Utils)
+- **Total classes in Term package**: ~15 (from ~11)
+- **Not overwhelming**: Clear organization
+
+### Next Steps
+1. Apply similar pattern to `SentenceReadFragment` (3,074 lines)
+2. Apply pattern to `MainActivity` (2,396 lines)
+3. Consider creating a `BaseRepository` for common network code
+4. Consider creating a `BaseViewModel` for common ViewModel patterns
