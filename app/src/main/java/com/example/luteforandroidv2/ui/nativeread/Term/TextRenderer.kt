@@ -21,6 +21,11 @@ class TextRenderer {
     // Store paragraph information for term interaction
     private var paragraphInfo: List<Paragraph> = emptyList()
     private var segmentInfoList: List<SegmentInfo> = emptyList()
+    private var customTextColor: Int? = null
+    
+    fun setCustomTextColor(color: Int?) {
+        customTextColor = color
+    }
 
     /** Render text content into the provided container */
     fun renderTextContent(
@@ -240,6 +245,20 @@ class TextRenderer {
                                             spanFlags
                                     )
                                 }
+                                
+                                val textColor = customTextColor
+                                if (textColor != null) {
+                                    spannableString.setSpan(
+                                            android.text.style.ForegroundColorSpan(textColor),
+                                            info.start,
+                                            info.end,
+                                            spanFlags
+                                    )
+                                    Log.d(
+                                            "TextRenderer",
+                                            "Applied custom text color ($textColor) to status ${segment.status} segment: ${segment.text}"
+                                    )
+                                }
                             } else {
                                 // Status 0 terms are interactive but get solid blue text color
                                 // This overrides any default text color to clearly indicate they
@@ -276,6 +295,20 @@ class TextRenderer {
                                         info.start,
                                         info.end,
                                         spanFlags
+                                )
+                            }
+                            
+                            val textColor2 = customTextColor
+                            if (textColor2 != null) {
+                                spannableString.setSpan(
+                                        android.text.style.ForegroundColorSpan(textColor2),
+                                        info.start,
+                                        info.end,
+                                        spanFlags
+                                )
+                                Log.d(
+                                        "TextRenderer",
+                                        "Applied custom text color ($textColor2) to non-interactive status ${segment.status} segment: ${segment.text}"
                                 )
                             }
                         }

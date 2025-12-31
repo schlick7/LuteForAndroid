@@ -493,6 +493,9 @@ class NativeReadFragment :
                     "NativeReadFragment",
                     "Rendering content with language ID: ${content.pageMetadata.languageId}"
             )
+            // Get custom text color from theme manager and set it on text renderer
+            val customTextColor = themeManager?.getCurrentTextColor()
+            textRenderer.setCustomTextColor(customTextColor)
             textRenderer.renderTextContent(binding.textContentContainer, content, this)
 
             // Monitor scroll position to understand the jumping behavior

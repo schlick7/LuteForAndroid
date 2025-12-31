@@ -2567,6 +2567,9 @@ class SentenceReadFragment :
             )
 
         // Render the current sentence group
+        // Get custom text color from theme manager and set it on text renderer
+        val customTextColor = themeManager?.getCurrentTextColor()
+        textRenderer.setCustomTextColor(customTextColor)
         textRenderer.renderTextContent(binding.textContentContainer, currentSentenceContent, this)
 
         // Show sentence navigation controls

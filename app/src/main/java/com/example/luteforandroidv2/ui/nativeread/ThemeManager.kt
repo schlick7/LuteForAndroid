@@ -78,6 +78,29 @@ class ThemeManager(private val context: Context) {
         }
     }
 
+    /** Get the current text color that would be applied */
+    fun getCurrentTextColor(): Int {
+        val themeMode = themePrefs.getString("native_reader_theme_mode", "App Settings")
+        val textColor: String?
+        
+        if (themeMode == "Custom") {
+            textColor = themePrefs.getString("text_color", null)
+            return if (textColor != null) {
+                try {
+                    android.graphics.Color.parseColor(textColor)
+                } catch (e: IllegalArgumentException) {
+                    Log.e("ThemeManager", "Invalid text color format: $textColor", e)
+                    ContextCompat.getColor(context, R.color.lute_on_background)
+                }
+            } else {
+                ContextCompat.getColor(context, R.color.lute_on_background)
+            }
+        } else {
+            // App Settings mode - use lute_on_background color from resources
+            return ContextCompat.getColor(context, R.color.lute_on_background)
+        }
+    }
+
     /** Update text color in all NativeTextViews within a container */
     private fun updateTextColorInContainer(container: ViewGroup, color: Int) {
         val childCount = container.childCount
