@@ -1177,6 +1177,11 @@ class AppSettingsFragment : Fragment() {
             nativeReaderThemeModeSpinner.selectedItemPosition,
             0
         )
+
+        // Load color values into EditTexts
+        val colorsPref = requireContext().getSharedPreferences("native_reader_theme", Context.MODE_PRIVATE)
+        backgroundColorEditText.setText(colorsPref.getString("background_color", "#48484A"))
+        textColorEditText.setText(colorsPref.getString("text_color", "#EBEBEB"))
     }
 
     /** Load Native Reader Theme settings from SharedPreferences */
