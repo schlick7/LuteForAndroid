@@ -1188,8 +1188,8 @@ class AppSettingsFragment : Fragment() {
     private fun loadNativeReaderThemeSettings() {
         val sharedPref =
             requireContext().getSharedPreferences("native_reader_theme", Context.MODE_PRIVATE)
-        val backgroundColor = sharedPref.getString("background_color", "#FFFFFF")
-        val textColor = sharedPref.getString("text_color", "#000000")
+        val backgroundColor = sharedPref.getString("background_color", "#48484A")
+        val textColor = sharedPref.getString("text_color", "#EBEBEB")
         val themeMode = sharedPref.getString("native_reader_theme_mode", "App Settings")
 
         // Set the spinner selection
@@ -1253,9 +1253,9 @@ class AppSettingsFragment : Fragment() {
                     putString("text_color", textColor)
                 }
             } else {
-                // For App Settings mode, save the default values
-                putString("background_color", "#48484A")
-                putString("text_color", "#EBEBEB")
+                // For App Settings mode, don't overwrite custom colors
+                // Just save the theme mode - custom colors will be ignored
+                // when not in Custom mode
             }
             apply()
         }
