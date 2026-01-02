@@ -64,7 +64,8 @@ class TextRenderer {
                         content.paragraphs,
                         content.pageMetadata.isRTL,
                         termInteractionListener,
-                        content.pageMetadata
+                        content.pageMetadata,
+                        customTextColor
                 )
         container.addView(contentView)
 
@@ -78,7 +79,8 @@ class TextRenderer {
             paragraphs: List<Paragraph>,
             isRTL: Boolean,
             termInteractionListener: NativeTextView.TermInteractionListener?,
-            pageMetadata: PageMetadata
+            pageMetadata: PageMetadata,
+            customTextColor: Int? = null
     ): View {
         // Combine all paragraphs into one text string with proper paragraph spacing
         val combinedText = StringBuilder()
@@ -158,6 +160,13 @@ class TextRenderer {
                     Log.d("TextRenderer", "Setting segment info count: ${segmentInfo.size}")
                     // Set segment information for term lookup
                     setSegmentInfo(segmentInfo)
+
+                    // Apply custom text color to the NativeTextView itself
+                    // This ensures plain text (non-segment text) also uses the custom color
+                    if (customTextColor != null) {
+                        Log.d("TextRenderer", "Applying custom text color ($customTextColor) to NativeTextView")
+                        setTextColor(customTextColor)
+                    }
 
                     // Apply styling and status-based background colors
                     val spannableString = android.text.SpannableString(text)
